@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>TWLauncher | TWL</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">TWLAUNCHER</div>
+
+        <div class="window-controls">
+            <i class="min-btn fas fa-window-minimize"></i>
+            <i class="close-btn fas fa-times"></i>
+        </div>
+        
+        <div class="sidebar">
+            <img src="assets/logos/twl.png" draggable="false" class="icon">
+            <div class="sidebar-icons">
+                <img src="https://avatars.githubusercontent.com/u/705559" draggable="false" class="sidebar-icon active" data-id="tw">
+                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/412220/4fb73658f000e318c8abc88b98fb2ddb27f1288b.ico" draggable="false" class="sidebar-icon" data-id="ddnet">
+                <img src="assets/logos/tclient.png" draggable="false" class="sidebar-icon" data-id="tclient">
+                <img src="assets/logos/cactus.png" draggable="false" class="sidebar-icon" data-id="cactus">
+                <img src="https://avatars.githubusercontent.com/u/76408142" draggable="false" class="sidebar-icon notavailable" data-id="sollyclient">
+                <img src="https://avatars.githubusercontent.com/u/45486474" draggable="false" class="sidebar-icon notavailable" data-id="chillerbotux">
+            </div>
+            <div class="help-icon">?</div>
+        </div>
+
+        <div class="main-content">
+            <div class="game-container">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Teeworlds_logo.png" draggable="false" class="game-logo">
+                <img src="https://www.teeworlds.com/images/screens/screenshot_grass.png" draggable="false" class="game-image">
+                <div class="button-container">
+                    <button class="launch-btn">LAUNCH</button>
+                    <i class="fas fa-folder folder-icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Script for minimazing and closing!! yaay :333
+        document.querySelector('.min-btn').addEventListener('click', () => {
+          ipcRenderer.send('minimize-window');
+        });
+
+        document.querySelector('.close-btn').addEventListener('click', () => {
+          ipcRenderer.send('hide-window');
+        });
+      </script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+@font-face {
+  font-family: 'DrukWideCyr';
+  src: url('assets/fonts/DrukWideCyrMedium.otf') format('opentype');
+}
+
+* {
+  user-select: none;
+  text-decoration: none;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  color: white;
+  background-color: transparent;
+  font-family: 'DrukWideCyr', sans-serif;
+  height: 720px;
+  width: 1280px;
+  overflow: hidden;
+}
+
+.container {
+  height: 720px;
+  width: 1280px;
+  background-color: #101010;
+}
+
+.header {
+  position: absolute;
+  left: 363px;
+  top: 16px;
+  width: 555px;
+  height: 45px;
+  background-color: #202020;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: #8B5CF6;
+  -webkit-app-region: drag;
+}
+
+.sidebar {
+  position: absolute;
+  left: 16px;
+  top: 8px;
+  width: 80px;
+  background-color: #202020;
+  border-radius: 25px;
+  padding: 16px 2.5px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.sidebar-icons {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-end;
+  width: 100%;
+  position: relative;
+  right: 15px;
+}
+
+.icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #202020;
+}
+
+.sidebar-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #202020;
+  border: 2px solid white;
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar-icon.active {
+  border: 2px solid #8B5CF6;
+  box-shadow: 0 0 10px 1px #8B5CF6;
+  transition: all 0.3s ease-in-out;
+}
+
+.sidebar-icon.notavailable {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.help-icon {
+  width: 48px;
+  height: 48px;
+  border: 2px solid white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  background-color: transparent;
+  margin-top: 87.5px;
+}
+
+.main-content {
+  position: absolute;
+  left: 113px;
+  top: 86px;
+  width: 1130px;
+  height: 593px;
+}
+
+.game-container {
+  width: 100%;
+  height: 100%;
+  border: 8px solid #8B5CF6;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.game-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  opacity: 0.25;
+}
+
+.game-logo {
+  position: absolute;
+  top: 40px;
+  z-index: 1;
+  width: 500px;
+  height: 165px;
+  object-fit: contain;
+  max-width: 500px;
+  max-height: 165px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button-container {
+  position: absolute;
+  bottom: 40px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.launch-btn, .install-btn, .update-btn {
+  position: relative;
+  width: 288px;
+  height: 48px;
+  background-color: #101010;
+  border-radius: 16px;
+  color: white;
+  font-family: 'DrukWideCyr', sans-serif;
+  font-size: 24px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.launch-btn {
+  border: 4px solid #9c72ff;
+}
+
+.launch-btn:hover {
+  background-color: #c1a7ff;
+}
+
+.install-btn {
+  border: 4px solid #ff7474;
+}
+
+.install-btn:hover {
+  background-color: #ffb0b0;
+}
+
+.update-btn {
+  border: 4px solid #8cff8c;
+}
+
+.update-btn:hover {
+  background-color: #c3ffc3;
+}
+
+.progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.8);
+  transition: width 0.3s ease;
+  border-radius: 5px;
+}
+
+.status-text {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #888;
+}
+
+.folder-icon {
+  font-size: 32px;
+  color: white;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.folder-icon:hover {
+  color: #8B5CF6;
+}
+
+.delete-icon {
+  font-size: 32px;
+  color: #ff7575;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.delete-icon:hover {
+  color: #ff5353;
+}
+
+.delete-icon:active {
+  color: #ff8484;
+}
+
+.info-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #101010;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.info-page.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.app-info {
+  text-align: center;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+}
+
+.app-info img {
+  width: 100px;
+  height: 100px;
+  border-radius: 16px;
+  margin-bottom: 16px;
+}
+
+.app-info h1 {
+  font-size: 36px;
+  margin: 0;
+  color: #8B5CF6;
+  font-family: 'DrukWideCyr', sans-serif;
+}
+
+.app-info p {
+  font-size: 18px;
+  max-width: 600px;
+  margin: 16px 0;
+  color: #ccc;
+}
+
+.made-by {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  color: #888;
+  margin: 16px 0;
+}
+
+.made-by a {
+  color: #8B5CF6;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.made-by a:hover {
+  color: #a78bfa;
+}
+
+.info-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+}
+
+.info-btn {
+  width: 200px;
+  height: 48px;
+  background-color: #202020;
+  border: 2px solid #8B5CF6;
+  border-radius: 16px;
+  color: white;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.info-btn:hover {
+  background-color: #8B5CF6;
+  border-color: #a78bfa;
+}
+
+.back-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 48px;
+  height: 48px;
+  background-color: #202020;
+  border: 2px solid #8B5CF6;
+  border-radius: 16px;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.back-btn:hover {
+  background-color: #8B5CF6;
+}
+
+.window-controls {
+  position: absolute;
+  top: 25px;
+  right: 25px;
+  z-index: 100;
+}
+
+.window-controls i {
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  margin-left: 15px;
+  transition: color 0.3s ease;
+}
+
+.window-controls i:hover {
+  color: #8B5CF6;
+}
+
+.min-btn {
+  margin-right: 10px;
+}
+
+.close-btn {
+  color: #e74c3c;
+}
+
+.close-btn:hover {
+  color: #c0392b;
+}

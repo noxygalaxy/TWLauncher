@@ -1,0 +1,54 @@
+{
+    "name": "tw-launcher",
+    "version": "1.0.0",
+    "description": "TWLauncher",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "build": "electron-builder"
+    },
+    "author": "noxygalaxy",
+    "license": "MIT",
+    "dependencies": {
+        "adm-zip": "^0.5.16",
+        "axios": "^1.6.7",
+        "fs-extra": "^11.1.1",
+        "winreg": "^1.2.5"
+    },
+    "devDependencies": {
+        "electron": "latest",
+        "electron-builder": "^26.0.12"
+    },
+    "homepage": "https://twlauncher.netlify.app",
+    "bugs": {
+        "url": "https://github.com/noxygalaxy/twlauncher/issues"
+    },
+"build": {
+        "appId": "com.noxygalaxy.twlauncher",
+        "productName": "TWLauncher",
+        "copyright": "2025 noxygalaxy",
+        "directories": {
+            "output": "dist"
+        },
+        "files": [
+            "main.js",
+            "src/**/*",
+            "node_modules/**/*",
+            "package.json"
+        ],
+        "win": {
+            "target": ["portable", "nsis"],
+            "icon": "src/assets/logos/twl.ico"
+        },
+        "nsis": {
+            "oneClick": false,
+            "perMachine": true,
+            "allowToChangeInstallationDirectory": true,
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true
+        },
+        "portable": {
+            "artifactName": "${productName}-v${version}-${arch}.${ext}"
+        }
+    }
+}
