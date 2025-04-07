@@ -20,7 +20,6 @@ function crtWndFksj() {
     icon: path.join(__dirname, 'src', 'assets', 'logos', 'twl.png'),
   });
 
-  wnxKjd.openDevTools();
   wnxKjd.loadFile('src/index.html');
   wnxKjd.on('close', (evntPqr) => {
     evntPqr.preventDefault();
