@@ -37,16 +37,8 @@
             "package.json"
         ],
         "win": {
-            "target": ["portable", "nsis"],
+            "target": ["portable"],
             "icon": "src/assets/logos/twl.ico"
-        },
-        "nsis": {
-            "oneClick": false,
-            "perMachine": true,
-            "allowToChangeInstallationDirectory": true,
-            "createDesktopShortcut": true,
-            "createStartMenuShortcut": true,
-            "artifactName": "${productName}-${arch}-Setup.${ext}"
         },
         "portable": {
             "artifactName": "${productName}-${arch}.${ext}"
