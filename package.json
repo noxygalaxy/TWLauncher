@@ -45,10 +45,11 @@
             "perMachine": true,
             "allowToChangeInstallationDirectory": true,
             "createDesktopShortcut": true,
-            "createStartMenuShortcut": true
+            "createStartMenuShortcut": true,
+            "artifactName": "${productName}-${arch}-Setup.${ext}"
         },
         "portable": {
-            "artifactName": "${productName}-v${version}-${arch}.${ext}"
+            "artifactName": "${productName}-${arch}.${ext}"
         }
     }
 }
