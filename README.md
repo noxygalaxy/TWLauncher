@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/github/created-at/noxygalaxy/twlauncher?style=for-the-badge"></img>  
 </div>
 
-Teeworlds Launcher ( or TWL ) is a windows application designed to manage and launch various Teeworlds clients easily. It provides a modern interface to launch Steam-based Teeworlds most popular clients, with features like automatic updates.
+Teeworlds Launcher ( or TWL ) is a windows application designed to manage and launch various Teeworlds clients easily. It provides a modern interface to launch Teeworlds most popular clients, with features like automatic updates.
 
 ## Features
 
@@ -23,6 +23,7 @@ Teeworlds Launcher ( or TWL ) is a windows application designed to manage and la
 ## Dependencies
 
 - `electron`: Framework for building desktop applications
+- `electron-builder`: To build `electron`-based apps.
 - `winreg`: Windows registry access for Steam path detection
 - `axios`: HTTP client for downloading updates
 - `adm-zip`: ZIP file handling for client installation
@@ -36,10 +37,10 @@ Teeworlds Launcher ( or TWL ) is a windows application designed to manage and la
 5. Use the tray icon to minimize or access quick launch options
 6. Click the "?" icon for more information and links
 
-## Supported Games/Clients
+## Supported Clients
 
-- **Teeworlds**
-- **DDraceNetwork**
+- **Teeworlds** - Steam
+- **DDraceNetwork** - Steam
 - **TClient**
 - **CactusClient**
 
