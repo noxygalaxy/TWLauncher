@@ -33,8 +33,14 @@ Teeworlds Launcher ( or TWL ) is a windows application designed to manage and la
 1. Launch the application
 2. Use the sidebar to select a client
 3. Click "INSTALL" to download and new client OR Click "LAUNCH" to start an installed game
-5. Use the tray icon to minimize or access quick launch options
-6. Click the "?" icon for more information and links
+4. Use the tray icon to minimize or access quick launch options
+5. Click the "?" icon for more information and links
+
+## Compiling
+
+1.  Clone the repository `git clone https://github.com/noxygalaxy/TWLauncher.git`
+2.  Install dependencies `npm install`
+3.  Now compile with `npm run build`
 
 ## Supported Games/Clients
 
@@ -46,6 +52,7 @@ Teeworlds Launcher ( or TWL ) is a windows application designed to manage and la
 ## Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Submit a pull request
