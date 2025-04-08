@@ -4,7 +4,7 @@
   </div>
   <h1>TWLauncher</h1>
   <img src="https://img.shields.io/github/downloads/noxygalaxy/twlauncher/total?style=for-the-badge"></img>  
-  <a href="https://discord.gg/mwPZAQwrDB"><img src="https://dcbadge.limes.pink/api/server/yvvJW2z9zB"></img></a>  
+  <a href="https://discord.gg/mwPZAQwrDB"><img src="https://dcbadge.limes.pink/api/server/mwPZAQwrDB"></img></a>  
   <img src="https://img.shields.io/github/created-at/noxygalaxy/twlauncher?style=for-the-badge"></img>  
 </div>
 
