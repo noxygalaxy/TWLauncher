@@ -18,14 +18,15 @@
         <div class="sidebar">
             <img src="assets/logos/twl.png" draggable="false" class="icon">
             <div class="sidebar-icons">
-                <img src="https://avatars.githubusercontent.com/u/705559" draggable="false" class="sidebar-icon active" data-id="tw">
-                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/412220/4fb73658f000e318c8abc88b98fb2ddb27f1288b.ico" draggable="false" class="sidebar-icon" data-id="ddnet">
-                <img src="assets/logos/tclient.png" draggable="false" class="sidebar-icon" data-id="tclient">
-                <img src="assets/logos/cactus.png" draggable="false" class="sidebar-icon" data-id="cactus">
-                <img src="https://avatars.githubusercontent.com/u/76408142" draggable="false" class="sidebar-icon notavailable" data-id="sollyclient">
+                <img src="https://avatars.githubusercontent.com/u/705559" id="Teeworlds" draggable="false" class="sidebar-icon active" data-id="tw">
+                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/412220/4fb73658f000e318c8abc88b98fb2ddb27f1288b.ico" id="DDNet" draggable="false" class="sidebar-icon" data-id="ddnet">
+                <img src="assets/logos/tclient.png" id="Tater" draggable="false" class="sidebar-icon" data-id="tclient">
+                <img src="assets/logos/cactus.png" id="Cactus" draggable="false" class="sidebar-icon" data-id="cactus">
                 <img src="https://avatars.githubusercontent.com/u/45486474" draggable="false" class="sidebar-icon notavailable" data-id="chillerbotux">
             </div>
+            <div class="add-icon"><i class="fas fa-plus"></i></div>
             <div class="help-icon">?</div>
+            <div class="settings-icon"><i class="fas fa-cog"></i></div>
         </div>
 
         <div class="main-content">
@@ -38,18 +39,68 @@
                 </div>
             </div>
         </div>
+
+        <div class="settings-page">
+            <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+            <div class="settings-content">
+                <h1>SETTINGS</h1>
+                <div class="setting-item">
+                    <label>Installation Path</label>
+                    <input type="text" id="install-path" placeholder="Enter custom path" readonly>
+                    <button class="change-path-btn"><i class="fas fa-folder-open"></i> Change</button>
+                </div>
+                <div class="setting-item">
+                    <label>Theme</label>
+                    <select id="theme-select">
+                        <option value="default">Default</option>
+                        <option value="dark">Dark</option>
+                        <option value="light">Light</option>
+                        <option value="amoled">AMOLED</option>
+                        <option value="pineapple">Pineapple</option>
+                        <option value="grapeseed">Grapeseed</option>
+                        <option value="blueberry">Blueberry</option>
+                        <option value="strawberry">Strawberry</option>
+                        <option value="lime">Lime</option>
+                        <option value="mango">Mango</option>
+                        <option value="sunset">Sunset</option>
+                        <option value="galaxy">Galaxy</option>
+                        <option value="neon">Neon</option>
+                        <option value="cyberpunk">Cyberpunk</option>
+                    </select>
+                </div>
+                <button class="save-settings-btn">Save Settings</button>
+            </div>
+        </div>
+
+        <div class="content-browser-page">
+            <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+            <div class="content-browser-content">
+                <h1>CONTENT BROWSER</h1>
+                <div class="search-bar">
+                    <input type="text" id="search-input" placeholder="Search skins...">
+                    <button id="search-btn"><i class="fas fa-search"></i></button>
+                </div>
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="skins">Skins</button>
+                    <button class="tab-btn" data-tab="game">Gameskins</button>
+                    <button class="tab-btn" data-tab="entities">Entities</button>
+                    <button class="tab-btn" data-tab="particles">Particles</button>
+                    <button class="tab-btn" data-tab="emoticons">Emoticons</button>
+                </div>
+                <div class="tab-content" id="skins-content"></div>
+                <div class="tab-content" id="game-content" style="display: none;"></div>
+                <div class="tab-content" id="entities-content" style="display: none;"></div>
+                <div class="tab-content" id="particles-content" style="display: none;"></div>
+                <div class="tab-content" id="emoticons-content" style="display: none;"></div>
+            </div>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="scripts/script.js"></script>
     <script>
         // Script for minimazing and closing!! yaay :333
-        document.querySelector('.min-btn').addEventListener('click', () => {
-          ipcRenderer.send('minimize-window');
-        });
-
-        document.querySelector('.close-btn').addEventListener('click', () => {
-          ipcRenderer.send('hide-window');
-        });
-      </script>
+        document.querySelector('.min-btn').addEventListener('click', () => ipcRenderer.send('minimize-window'));
+        document.querySelector('.close-btn').addEventListener('click', () => ipcRenderer.send('hide-window'));
+    </script>
 </body>
 </html>

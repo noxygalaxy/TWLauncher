@@ -20,7 +20,8 @@
     "axe/text-alternatives": "off",
     "button-type": "off",
     "axe/name-role-value": "off",
-    "disown-opener": "off"
+    "disown-opener": "off",
+    "no-inline-styles": "off"
   },
   "browserslist": [
     "defaults",

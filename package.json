@@ -12,6 +12,8 @@
     "dependencies": {
         "adm-zip": "^0.5.16",
         "axios": "^1.6.7",
+        "discord-rpc": "^4.0.1",
+        "dotenv": "^16.4.7",
         "fs-extra": "^11.1.1",
         "winreg": "^1.2.5"
     },
@@ -23,7 +25,7 @@
     "bugs": {
         "url": "https://github.com/noxygalaxy/twlauncher/issues"
     },
-"build": {
+    "build": {
         "appId": "com.noxygalaxy.twlauncher",
         "productName": "TWLauncher",
         "copyright": "2025 noxygalaxy",
@@ -35,6 +37,12 @@
             "src/**/*",
             "node_modules/**/*",
             "package.json"
+        ],
+        "extraFiles": [
+        {
+            "from": ".env",
+            "to": "."
+        }
         ],
         "win": {
             "target": ["portable"],

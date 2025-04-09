@@ -1,10 +1,60 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Tray, Menu, dialog, ipcMain } = require('electron');
+require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const Registry = require('winreg');
+const DiscordRPC = require('discord-rpc');
 
 let mainWindow;
 let tray = null;
+
+const clientId = process.env.DISCORD_CLIENT_ID;
+if (!clientId) {
+  console.error('DISCORD_CLIENT_ID not found in .env file. Discord RPC will not work.');
+}
+
+const rpc = new DiscordRPC.Client({ transport: 'ipc' });
+let rpcReady = false;
+
+if (clientId) {
+  DiscordRPC.register(clientId);
+
+  rpc.on('ready', () => {
+    console.log('Discord RPC is ready');
+    rpcReady = true;
+    updateDiscordActivity();
+  });
+
+  rpc.on('error', (err) => {
+    console.error('Discord RPC error:', err);
+  });
+
+  rpc.login({ clientId }).catch(console.error);
+}
+
+function updateDiscordActivity(clientId, theme) {
+  if (!rpcReady) return;
+  rpc.setActivity({
+    details: `Using ${theme} theme`,
+    state: `On ${clientId} Client Page`,
+    startTimestamp: Math.floor(Date.now() / 1000),
+    largeImageKey: 'twl_main',
+    largeImageText: '@noxygalaxy',
+    instance: false,
+  });
+  console.log(`Discord activity updated for ${clientId} with ${theme} theme`);
+}
+
+const configPath = path.join(app.getPath('appData'), 'TWLauncher', 'twlconfig.json');
+let config = { installPath: path.join(app.getPath('appData'), 'TWLauncher', 'clients'), theme: 'default' };
+
+if (fs.existsSync(configPath)) {
+    config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+}
+
+function saveConfig() {
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -24,6 +74,10 @@ function createWindow() {
   mainWindow.on('close', (event) => {
     event.preventDefault();
     mainWindow.hide();
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('apply-theme', config.theme);
   });
 
   createTray();
@@ -204,6 +258,42 @@ function launchGame(id) {
   mainWindow.webContents.send('launch-game', id);
 }
 
+ipcMain.handle('change-install-path', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+      title: 'Select Installation Directory'
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+      config.installPath = result.filePaths[0];
+      saveConfig();
+      return config.installPath;
+  }
+  return null;
+});
+
+ipcMain.handle('get-install-path', () => {
+  return config.installPath;
+});
+
+ipcMain.on('save-settings', (event, { installPath, theme }) => {
+  config.installPath = installPath;
+  config.theme = theme;
+  saveConfig();
+  mainWindow.webContents.send('apply-theme', theme);
+});
+
+ipcMain.on('select-client', (event, clientId) => {
+  mainWindow.webContents.send('client-selected', clientId);
+});
+
+ipcMain.handle('get-initial-theme', () => {
+  return config.theme;
+});
+
+ipcMain.on('update-discord-rpc', (event, { clientId, theme }) => {
+  updateDiscordActivity(clientId, theme);
+});
+
 ipcMain.on('minimize-window', () => {
     mainWindow.minimize();
 });
@@ -215,6 +305,9 @@ ipcMain.on('hide-window', () => {
         content: 'Launcher will work in background, to close it right click on the tray icon',
         icon: path.join(__dirname, 'src', 'assets', 'logos', 'twl.png'),
     });
+    if (rpcReady) {
+      rpc.destroy();
+    }
 });
 
 ipcMain.on('launch-game', async () => {
@@ -223,8 +316,7 @@ ipcMain.on('launch-game', async () => {
 });
 
 app.whenReady().then(() => {
-  const appDataPath = app.getPath('appData');
-  const clientsPath = path.join(appDataPath, 'TWLauncher', 'clients');
+  const clientsPath = config.installPath;
 
   if (!fs.existsSync(clientsPath)) {
     fs.mkdirSync(clientsPath, { recursive: true });
