@@ -1,31 +1,74 @@
-name: Build/release
+name: Build TWLauncher for Windows
 
-on: push
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
 
 jobs:
-  release:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [windows-latest]
+  build-windows:
+    runs-on: windows-latest
 
     steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v1
-
-      - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          node-version: 16
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Build/release Electron app
-        uses: paneron/action-electron-builder@v1.8.1
-        with:
-          # GitHub token, automatically provided to the action
-          # (No need to define this secret in the repo settings)
-          github_token: ${{ secrets.github_token }}
+        run: npm run build
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-          # If the commit is tagged with a version (e.g. "v1.0.0"),
-          # release the app after building
-          release: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twlauncher-windows
+          path: dist/TWLauncher-x64.exe
+
+      - name: Check for version in commit message
+        id: check_version
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MESSAGE" | grep -E 'v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?'; then
+            VERSION=$(echo "$COMMIT_MESSAGE" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9]+(\.[0-9]+)?)?' | head -1)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "Found version: $VERSION"
+          else
+            echo "No version found in commit message"
+            echo "version=" >> $GITHUB_OUTPUT
+          fi
+        shell: bash
+
+      - name: Create tag for version
+        if: steps.check_version.outputs.version != ''
+        run: |
+          VERSION="${{ steps.check_version.outputs.version }}"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create draft release
+        if: steps.check_version.outputs.version != ''
+        run: |
+          VERSION="${{ steps.check_version.outputs.version }}"
+          gh release create "$VERSION" \
+            --title "Release $VERSION" \
+            --draft \
+            --notes "Automated draft release for $VERSION" \
+            dist/TWLauncher-x64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
