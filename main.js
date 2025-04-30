@@ -7,6 +7,9 @@ const DiscordRPC = require('discord-rpc');
 
 let mainWindow;
 let tray = null;
+let loadingWindow;
+
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
 
 const clientId = process.env.DISCORD_CLIENT_ID;
 if (!clientId) {
@@ -32,7 +35,7 @@ if (clientId) {
   rpc.login({ clientId }).catch(console.error);
 }
 
-function updateDiscordActivity(clientId, theme) {
+function updateDiscordActivity(clientId = 'tw', theme = 'default') {
   if (!rpcReady) return;
   rpc.setActivity({
     details: `Using ${theme} theme`,
@@ -46,7 +49,13 @@ function updateDiscordActivity(clientId, theme) {
 }
 
 const configPath = path.join(app.getPath('appData'), 'TWLauncher', 'twlconfig.json');
-let config = { installPath: path.join(app.getPath('appData'), 'TWLauncher', 'clients'), theme: 'default' };
+let config = {
+  installPath: path.join(app.getPath('appData'), 'TWLauncher', 'clients'),
+  theme: 'default',
+  streamerMode: false,
+  enableTransitions: true,
+  enableSounds: true,
+};
 
 if (fs.existsSync(configPath)) {
     config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
@@ -56,10 +65,28 @@ function saveConfig() {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 }
 
-function createWindow() {
+function createLoadingWindow() {
+  loadingWindow = new BrowserWindow({
+    width: 400,
+    height: 300,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  });
+  loadingWindow.loadFile('src/load.html');
+  loadingWindow.center();
+}
+
+function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
     height: 720,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
@@ -71,16 +98,26 @@ function createWindow() {
   });
 
   mainWindow.loadFile('src/index.html');
+  mainWindow.openDevTools();
+  mainWindow.once('ready-to-show', async () => {
+    if (loadingWindow) {
+      loadingWindow.close();
+      loadingWindow = null;
+    }
+    mainWindow.show();
+    mainWindow.webContents.send('apply-theme', config.theme);
+    
+    const gameStatuses = await getAllGameStatuses();
+    mainWindow.webContents.send('initial-game-statuses', gameStatuses);
+    
+    createTray();
+    initializeDiscordRPC();
+  });
+
   mainWindow.on('close', (event) => {
     event.preventDefault();
     mainWindow.hide();
   });
-
-  mainWindow.webContents.on('did-finish-load', () => {
-    mainWindow.webContents.send('apply-theme', config.theme);
-  });
-
-  createTray();
 }
 
 function getSteamPath() {
@@ -177,50 +214,20 @@ async function getGamePath(gameId) {
   return false;
 }
 
+async function getAllGameStatuses() {
+  const gameIds = ['tw', 'ddnet', 'tclient', 'cactus'];
+  const statuses = {};
+  for (const gameId of gameIds) {
+    const isInstalled = await getGamePath(gameId);
+    statuses[gameId] = isInstalled;
+  }
+  return statuses;
+}
+
 async function buildTrayMenu() {
   try {
-    const isTeeworldsInstalled = await getGamePath('tw');
-    const isDdnetInstalled = await getGamePath('ddnet');
-    const isTclientInstalled = await getGamePath('tclient');
-    const isCactusInstalled = await getGamePath('cactus');
-
-    console.log('Building tray menu with status:', {
-      Teeworlds: isTeeworldsInstalled,
-      DDraceNetwork: isDdnetInstalled,
-      TClient: isTclientInstalled,
-      Cactus: isCactusInstalled
-    });
-
-    const launchSubmenu = Menu.buildFromTemplate([
-      { 
-        label: 'Teeworlds', 
-        icon: path.join(__dirname, 'src', 'assets', 'tray', 'tw.png'), 
-        click: () => launchGame('tw'),
-        enabled: isTeeworldsInstalled
-      },
-      { 
-        label: 'DDraceNetwork', 
-        icon: path.join(__dirname, 'src', 'assets', 'tray', 'ddnet.png'), 
-        click: () => launchGame('ddnet'),
-        enabled: isDdnetInstalled
-      },
-      { 
-        label: 'TClient', 
-        icon: path.join(__dirname, 'src', 'assets', 'tray', 'tclient.png'), 
-        click: () => launchGame('tclient'),
-        enabled: isTclientInstalled
-      },
-      { 
-        label: 'Cactus', 
-        icon: path.join(__dirname, 'src', 'assets', 'tray', 'cactus.png'), 
-        click: () => launchGame('cactus'),
-        enabled: isCactusInstalled
-      }
-    ]);
-
     return Menu.buildFromTemplate([
       { label: 'Show App', click: () => mainWindow.show() },
-      { label: 'Launch', submenu: launchSubmenu },
       { label: 'Close App', click: () => {
           mainWindow.destroy();
           app.quit();
@@ -258,6 +265,41 @@ function launchGame(id) {
   mainWindow.webContents.send('launch-game', id);
 }
 
+function initializeDiscordRPC() {
+  const DiscordRPC = require('discord-rpc');
+  const clientId = process.env.DISCORD_CLIENT_ID;
+  if (!clientId) return;
+
+  const rpc = new DiscordRPC.Client({ transport: 'ipc' });
+  let retryCount = 0;
+  const maxRetries = 3;
+
+  function attemptConnection() {
+    rpc.login({ clientId })
+      .then(() => {
+        console.log('Discord RPC connected');
+        rpc.on('ready', () => updateDiscordActivity());
+      })
+      .catch((err) => {
+        console.error('RPC connection attempt failed:', err.message);
+        if (retryCount < maxRetries && err.message.includes('RPC_CONNECTION_TIMEOUT')) {
+          retryCount++;
+          console.log(`Retrying RPC connection (${retryCount}/${maxRetries})...`);
+          setTimeout(attemptConnection, 5000);
+        } else {
+          console.log('Max retries reached or unrecoverable error. RPC disabled.');
+        }
+      });
+  }
+
+  attemptConnection();
+}
+
+ipcMain.on('launch-game', async (event, gameId) => {
+  console.log(`Launching game: ${gameId}`);
+  mainWindow.webContents.send('launch-game', gameId);
+});
+
 ipcMain.handle('change-install-path', async () => {
   const result = await dialog.showOpenDialog(mainWindow, {
       properties: ['openDirectory'],
@@ -271,15 +313,31 @@ ipcMain.handle('change-install-path', async () => {
   return null;
 });
 
+ipcMain.handle('get-version', () => {
+  return packageJson.version;
+});
+
 ipcMain.handle('get-install-path', () => {
   return config.installPath;
 });
 
-ipcMain.on('save-settings', (event, { installPath, theme }) => {
+ipcMain.on('save-settings', (event, { installPath, theme, streamerMode, enableTransitions, enableSounds }) => {
   config.installPath = installPath;
   config.theme = theme;
+  config.streamerMode = streamerMode;
+  config.enableTransitions = enableTransitions;
+  config.enableSounds = enableSounds;
   saveConfig();
-  mainWindow.webContents.send('apply-theme', theme);
+  mainWindow.webContents.send('apply-settings', { theme, streamerMode, enableTransitions, enableSounds });
+});
+
+ipcMain.handle('get-initial-settings', () => {
+  return {
+      theme: config.theme,
+      streamerMode: config.streamerMode,
+      enableTransitions: config.enableTransitions,
+      enableSounds: config.enableSounds
+  };
 });
 
 ipcMain.on('select-client', (event, clientId) => {
@@ -310,9 +368,9 @@ ipcMain.on('hide-window', () => {
     }
 });
 
-ipcMain.on('launch-game', async () => {
-  const menu = await buildTrayMenu();
-  tray.setContextMenu(menu);
+ipcMain.on('launch-game', async (event, clientId) => {
+  console.log(`Launching game: ${clientId}`);
+  mainWindow.webContents.send('launch-game', clientId);
 });
 
 app.whenReady().then(() => {
@@ -322,12 +380,17 @@ app.whenReady().then(() => {
     fs.mkdirSync(clientsPath, { recursive: true });
   }
 
-  createWindow();
+  createLoadingWindow();
+  createMainWindow();
+});
 
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    else mainWindow.show();
-  });
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    createLoadingWindow();
+    createMainWindow();
+  } else {
+    mainWindow.show();
+  }
 });
 
 app.on('window-all-closed', (event) => {

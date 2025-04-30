@@ -18,15 +18,26 @@
         <div class="sidebar">
             <img src="assets/logos/twl.png" draggable="false" class="icon">
             <div class="sidebar-icons">
-                <img src="https://avatars.githubusercontent.com/u/705559" id="Teeworlds" draggable="false" class="sidebar-icon active" data-id="tw">
-                <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/412220/4fb73658f000e318c8abc88b98fb2ddb27f1288b.ico" id="DDNet" draggable="false" class="sidebar-icon" data-id="ddnet">
-                <img src="assets/logos/tclient.png" id="Tater" draggable="false" class="sidebar-icon" data-id="tclient">
-                <img src="assets/logos/cactus.png" id="Cactus" draggable="false" class="sidebar-icon" data-id="cactus">
-                <img src="https://avatars.githubusercontent.com/u/45486474" draggable="false" class="sidebar-icon notavailable" data-id="chillerbotux">
+                <div class="sidebar-icon-main">
+                    <div class="sidebar-icon-status"></div>
+                    <img src="https://avatars.githubusercontent.com/u/705559" id="Teeworlds" draggable="false" class="sidebar-icon active" data-id="tw">
+                </div>
+                <div class="sidebar-icon-main">
+                    <div class="sidebar-icon-status"></div>
+                    <img src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/412220/4fb73658f000e318c8abc88b98fb2ddb27f1288b.ico" id="DDNet" draggable="false" class="sidebar-icon" data-id="ddnet">
+                </div>
+                <div class="sidebar-icon-main">
+                    <div class="sidebar-icon-status"></div>
+                    <img src="assets/logos/tclient.png" id="TClient" draggable="false" class="sidebar-icon" data-id="tclient">
+                </div>
+                <div class="sidebar-icon-main">
+                    <div class="sidebar-icon-status"></div>
+                    <img src="assets/logos/cactus.png" id="Cactus" draggable="false" class="sidebar-icon" data-id="cactus">
+                </div>
             </div>
-            <div class="add-icon"><i class="fas fa-plus"></i></div>
-            <div class="help-icon">?</div>
-            <div class="settings-icon"><i class="fas fa-cog"></i></div>
+            <div class="add-icon" onclick="playOpen()"><i class="fas fa-plus"></i></div>
+            <div class="help-icon" onclick="playOpen()">?</div>
+            <div class="settings-icon" onclick="playOpen()"><i class="fas fa-cog"></i></div>
         </div>
 
         <div class="main-content">
@@ -34,14 +45,15 @@
                 <img src="https://upload.wikimedia.org/wikipedia/commons/b/b4/Teeworlds_logo.png" draggable="false" class="game-logo">
                 <img src="https://www.teeworlds.com/images/screens/screenshot_grass.png" draggable="false" class="game-image">
                 <div class="button-container">
-                    <button class="launch-btn">LAUNCH</button>
+                    <button class="launch-btn" onclick="playClick()">LAUNCH</button>
                     <i class="fas fa-folder folder-icon"></i>
                 </div>
             </div>
         </div>
+        <div class="app-version" id="app-version">Version: Loading...</div>
 
         <div class="settings-page">
-            <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+            <button class="back-btn" onclick="playOpen()"><i class="fas fa-arrow-left"></i></button>
             <div class="settings-content">
                 <h1>SETTINGS</h1>
                 <div class="setting-item">
@@ -68,12 +80,33 @@
                         <option value="cyberpunk">Cyberpunk</option>
                     </select>
                 </div>
+                <div class="setting-item">
+                    <label>Streamer Mode</label>
+                    <label class="switch">
+                        <input type="checkbox" id="streamer-mode">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>Enable Transitions</label>
+                    <label class="switch">
+                        <input class="notavailable" id="enable-transitions" checked2>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>Enable Sounds</label>
+                    <label class="switch">
+                        <input class="notavailable" id="enable-sounds" checked2>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
                 <button class="save-settings-btn">Save Settings</button>
             </div>
         </div>
 
         <div class="content-browser-page">
-            <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+            <button class="back-btn" onclick="playOpen()"><i class="fas fa-arrow-left"></i></button>
             <div class="content-browser-content">
                 <h1>CONTENT BROWSER</h1>
                 <div class="search-bar">
@@ -94,13 +127,64 @@
                 <div class="tab-content" id="emoticons-content" style="display: none;"></div>
             </div>
         </div>
+
+        <audio id="openSound" src="assets/audio/open.ogg"></audio>
+        <audio id="clickSound" src="assets/audio/click.ogg"></audio>
+        <audio id="changeSound" src="assets/audio/change.ogg"></audio>
+
+        <div class="music-player" id="music-player">
+            <div class="music-player-content">
+                <h3>Secret Music Player</h3>
+                <div class="track-info">
+                    <span id="current-track">No track selected</span>
+                </div>
+                <div class="player-controls">
+                    <button class="control-btn" id="prev-track"><i class="fas fa-step-backward"></i></button>
+                    <button class="control-btn" id="play-pause"><i class="fas fa-play"></i></button>
+                    <button class="control-btn" id="next-track"><i class="fas fa-step-forward"></i></button>
+                </div>
+                <div class="volume-control">
+                    <i class="fas fa-volume-up volume-icon"></i>
+                    <input type="range" id="volume-slider" class="custom-volume-slider" min="0" max="1" step="0.01" value="0.5">
+                </div>
+                <button class="close-player-btn"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+        <audio id="music-track" preload="auto"></audio>
     </div>
 
     <script src="scripts/script.js"></script>
+    <script src="scripts/audio.js"></script>
     <script>
         // Script for minimazing and closing!! yaay :333
         document.querySelector('.min-btn').addEventListener('click', () => ipcRenderer.send('minimize-window'));
         document.querySelector('.close-btn').addEventListener('click', () => ipcRenderer.send('hide-window'));
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.querySelector('.main-content');
+            const header = document.querySelector('.header');
+            const sidebar  = document.querySelector('.sidebar');
+            const sidebarIcons = document.querySelectorAll('.sidebar-icon');
+
+            sidebarIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    mainContent.classList.remove('transitionfade');
+                    mainContent.classList.remove('opacity');
+                    setTimeout(() => {
+                        mainContent.classList.add('transitionfade');
+                    }, 1000);
+                });
+            });
+
+            mainContent.classList.add('transition');
+            mainContent.classList.add('opacity');
+            setTimeout(() => {
+                sidebar.classList.add('transition');
+            }, 250);
+            setTimeout(() => {
+                header.classList.add('transition');
+            }, 500);
+        });
     </script>
 </body>
 </html>

@@ -11,6 +11,23 @@ const { ipcRenderer } = require('electron');
 // Probably all this thing was easier to do, but i'm a shit coder, blame me for my shit code!! <3
 // only stupid kids gonna steal the code and make this app as theirs :p
 
+async function displayVersion() {
+    try {
+        const version = await ipcRenderer.invoke('get-version');
+        const versionElement = document.getElementById('app-version');
+        console.log('Version Element:', document.getElementById('app-version'));
+        console.log('Version:', version);
+        if (!versionElement) throw new Error('Version element not found');
+        versionElement.textContent = `v${version}`;
+    } catch (error) {
+        console.error('Error fetching version:', error);
+        const versionElement = document.getElementById('app-version');
+        if (versionElement) {
+            versionElement.textContent = 'Error Loading Version';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const helpIcon = document.querySelector('.help-icon');
     const container = document.querySelector('.container');
@@ -23,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const changePathBtn = document.querySelector('.change-path-btn');
     const themeSelect = document.querySelector('#theme-select');
     const saveSettingsBtn = document.querySelector('.save-settings-btn');
-
     const contentBrowserPage = document.querySelector('.content-browser-page');
     const browserBackBtn = contentBrowserPage ? contentBrowserPage.querySelector('.back-btn') : null;
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -31,13 +47,67 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabContents = document.querySelectorAll('.tab-content');
     const searchInput = document.querySelector('#search-input');
     const searchBtn = document.querySelector('#search-btn');
+    const streamerModeToggle = document.querySelector('#streamer-mode');
 
     let currentTheme = 'default';
+
+    function playOpen() {
+        const sound = document.getElementById('openSound');
+        sound.play().catch(error => {
+            console.error('Error playing open sound:', error);
+        });
+    }
+    
+    function playChange() {
+        const sound = document.getElementById('changeSound');
+        sound.play().catch(error => {
+            console.error('Error playing change sound:', error);
+        });
+    }
+
+    setTimeout(() => {
+        displayVersion();
+    }, 500);
 
     ipcRenderer.invoke('get-initial-theme').then((theme) => {
       currentTheme = theme || 'default';
       themeSelect.value = currentTheme;
       document.body.className = `theme-${currentTheme}`;
+    });
+
+    ipcRenderer.invoke('get-initial-settings').then(settings => {
+        currentTheme = settings.theme || 'default';
+        themeSelect.value = currentTheme;
+        streamerModeToggle.checked = settings.streamerMode || false;
+        document.body.className = `theme-${currentTheme}${settings.streamerMode ? ' streamer-mode' : ''}`;
+    });
+
+    ipcRenderer.on('initial-game-statuses', (event, gameStatuses) => {
+        console.log('Received initial game statuses:', gameStatuses);
+        Object.keys(gameStatuses).forEach(gameId => {
+            const sidebarIconMain = document.querySelector(`.sidebar-icon[data-id="${gameId}"]`).parentElement;
+            if (sidebarIconMain) {
+                const statusElement = sidebarIconMain.querySelector('.sidebar-icon-status');
+                if (statusElement) {
+                    statusElement.style.backgroundColor = gameStatuses[gameId] ? '#8B5CF6' : '#ff7777';
+                    statusElement.style.display = 'block';
+                }
+            }
+        });
+        updateGameContent('tw', gameStatuses['tw']);
+    });
+
+    // Easter egg :0
+    let versionClickCount = 0;
+    const versionElement = document.getElementById('app-version');
+    versionElement.style.cursor = 'pointer';
+    versionElement.addEventListener('click', () => {
+        versionClickCount++;
+        if (versionClickCount >= 5) {
+            const musicPlayer = document.getElementById('music-player');
+            musicPlayer.classList.add('active');
+            versionClickCount = 0;
+        }
     });
 
     function updateDiscordRPC(clientId) {
@@ -49,6 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    ipcRenderer.on('rpc-error', (event, message) => {
+        console.log('RPC Error from main:', message);
+        alert(message);
+    });
+
     const appDataPath = process.env.APPDATA || 
                        (process.platform === 'darwin' ? 
                         path.join(process.env.HOME, 'Library', 'Preferences') : 
@@ -59,31 +134,43 @@ document.addEventListener('DOMContentLoaded', () => {
         'tw': {
             logo: 'https://upload.wikimedia.org/wikipedia/commons/b/b4/Teeworlds_logo.png',
             image: 'https://www.teeworlds.com/images/screens/screenshot_grass.png',
+            icon: 'https://avatars.githubusercontent.com/u/705559',
+            clientName: 'Teeworlds',
+            smallName: 'tw',
             steamAppId: '380840',
             steamGameFolder: 'Teeworlds'
         },
         'ddnet': {
             logo: 'https://cdn2.steamgriddb.com/logo_thumb/77d3dc866959ff8e2ec72beceaa43a92.png',
             image: 'https://shared.cloudflare.steamstatic.com/store_item_assets/steam/apps/412220/library_hero_2x.jpg?t=1733738444',
+            icon: 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/412220/4fb73658f000e318c8abc88b98fb2ddb27f1288b.ico',
+            clientName: 'DDNet',
+            smallName: 'ddnet',
             steamAppId: '412220',
             steamGameFolder: 'DDraceNetwork'
         },
         'tclient': {
             logo: 'assets/fulllogos/tclient.png',
             image: 'assets/bgs/tclient.png',
+            icon: 'assets/logos/tclient.png',
             clientName: 'TClient',
+            smallName: 'tclient',
             githubRepo: 'sjrc6/TaterClient-ddnet',
             executable: 'DDNet.exe'
         },
         'cactus': {
             logo: 'assets/fulllogos/cactus.png',
             image: 'assets/bgs/cactus.png',
+            icon: 'assets/logos/cactus.png',
+            smallName: 'cactus',
             clientName: 'Cactus',
             executable: 'DDNet.exe'
         },
         'cbux': {
             logo: 'assets/fulllogos/cbux.png',
             image: 'assets/bgs/cbux.png',
+            smallName: 'cbux',
+            icon: 'https://avatars.githubusercontent.com/u/45486474',
             clientName: 'ChillerBoxUX',
             executable: 'DDNet.exe'
         }
@@ -105,13 +192,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let cachedSteamPath = null;
 
+    setTimeout(() => {
+        displayVersion();
+    }, 500);
+
     function showInfoPage() {
         let infoPage = document.querySelector('.info-page');
         if (!infoPage) {
             infoPage = document.createElement('div');
             infoPage.className = 'info-page';
             infoPage.innerHTML = `
-                <button class="back-btn"><i class="fas fa-arrow-left"></i></button>
+                <button class="back-btn" onclick="playOpen()"><i class="fas fa-arrow-left"></i></button>
                 <div class="app-info">
                     <img src="assets/logos/twl.png" draggable="false" alt="TWL Icon">
                     <h1>TWLAUNCHER</h1>
@@ -153,8 +244,11 @@ document.addEventListener('DOMContentLoaded', () => {
         icon.addEventListener('click', () => {
             sidebarIcons.forEach(i => i.classList.remove('active'));
             icon.classList.add('active');
-            updateGameContent(icon.getAttribute('data-id'));
-            updateDiscordRPC(icon.getAttribute('id'));
+            playChange();
+            setTimeout(() => {
+                updateGameContent(icon.getAttribute('data-id'));
+                updateDiscordRPC(icon.getAttribute('id'));
+            }, 500);
         });
     });
 
@@ -182,15 +276,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (themeSelect && saveSettingsBtn) {
-        ipcRenderer.invoke('get-install-path').then(() => {});
-    
         saveSettingsBtn.addEventListener('click', () => {
-          const newInstallPath = installPathInput.value;
-          const newTheme = themeSelect.value;
-          currentTheme = newTheme;
-          ipcRenderer.send('save-settings', { installPath: newInstallPath, theme: newTheme });
-          if (settingsPage) settingsPage.classList.remove('active');
-          updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
+            const newInstallPath = installPathInput.value;
+            const newTheme = themeSelect.value;
+            const streamerMode = streamerModeToggle.checked;
+            currentTheme = newTheme;
+            ipcRenderer.send('save-settings', { 
+                installPath: newInstallPath, 
+                theme: newTheme,
+                streamerMode,
+            });
+            if (settingsPage) settingsPage.classList.remove('active');
+            updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
         });
     }
 
@@ -245,6 +342,14 @@ document.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.on('apply-theme', (event, theme) => {
         document.body.className = `theme-${theme}`;
         themeSelect.value = theme;
+        currentTheme = theme;
+        updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
+    });
+
+    ipcRenderer.on('apply-settings', (event, { theme, streamerMode }) => {
+        document.body.className = `theme-${theme}${streamerMode ? ' streamer-mode' : ''}`;
+        themeSelect.value = theme;
+        streamerModeToggle.checked = streamerMode;
         currentTheme = theme;
         updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
     });
@@ -544,6 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             button.disabled = false;
             button.removeEventListener('click', downloadSkin);
             button.addEventListener('click', () => shell.openPath(downloadPath));
+            ipcRenderer.send('skin-installed', skinName);
         } catch (error) {
             console.error(`Error downloading ${skinName}:`, error.message);
             button.textContent = 'Error';
@@ -652,7 +758,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const folderPath = await getGamePath(gameData);
         const hasFolder = !!folderPath;
-        let buttonClass, buttonText, buttonIcon;
+        let buttonClass, buttonText, buttonIcon, statusColor;
     
         if (gameId === 'cactus') {
             let latestVersion;
@@ -669,49 +775,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 buttonClass = 'update-btn';
                 buttonText = 'UPDATE';
                 buttonIcon = 'fas fa-arrow-up';
+                statusColor = '#77ffff';
             } else if (hasFolder) {
                 buttonClass = 'launch-btn';
                 buttonText = 'LAUNCH';
                 buttonIcon = 'fas fa-play';
+                statusColor = '#77ff77';
             } else {
                 buttonClass = 'install-btn';
                 buttonText = 'INSTALL';
                 buttonIcon = 'fas fa-download';
+                statusColor = '#ff7777';
             }
         } else if (gameData.githubRepo) {
             const release = await getLatestGitHubRelease(gameData.githubRepo);
             const latestVersion = release.tag_name;
             const currentVersion = hasFolder ? await getClientVersion(folderPath) : null;
-    
+            
             if (hasFolder && currentVersion && currentVersion < latestVersion) {
                 buttonClass = 'update-btn';
                 buttonText = 'UPDATE';
                 buttonIcon = 'fas fa-arrow-up';
+                statusColor = '#77ff77';
             } else if (hasFolder) {
                 buttonClass = 'launch-btn';
                 buttonText = 'LAUNCH';
                 buttonIcon = 'fas fa-play';
+                statusColor = '#8B5CF6';
             } else {
                 buttonClass = 'install-btn';
                 buttonText = 'INSTALL';
                 buttonIcon = 'fas fa-download';
+                statusColor = '#ff7777';
             }
         } else {
             buttonClass = hasFolder ? 'launch-btn' : 'install-btn';
             buttonText = hasFolder ? 'LAUNCH' : 'INSTALL';
             buttonIcon = hasFolder ? 'fas fa-play' : 'fas fa-download';
+            statusColor = hasFolder ? '#8B5CF6' : '#ff7777';
         }
     
         gameContainer.innerHTML = `
             <img src="${gameData.logo}" draggable="false" class="game-logo">
             <img src="${gameData.image}" draggable="false" class="game-image">
             <div class="button-container">
-                <button class="${buttonClass}" data-steam-id="${gameData.steamAppId || ''}">
+                <button class="${buttonClass}" onclick="playClick()" data-steam-id="${gameData.steamAppId || ''}">
                     <i class="${buttonIcon}"></i> ${buttonText}
                     <div class="progress-bar" style="width: 0%"></div>
                 </button>
                 ${hasFolder ? `<i class="fas fa-folder folder-icon" data-path="${folderPath || ''}"></i>` : ''}
-                ${hasFolder && gameData.clientName ? `<i class="fas fa-trash delete-icon" data-path="${folderPath || ''}" data-client="${gameData.clientName}"></i>` : ''}
+                ${hasFolder && gameData.clientName && !gameData.steamAppId ? `<i class="fas fa-trash delete-icon" onclick="playOpen()" data-path="${folderPath || ''}" data-client="${gameData.clientName}"></i>` : ''}
             </div>
         `;
     
@@ -748,6 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const folderIcon = gameContainer.querySelector('.folder-icon');
         if (folderIcon) {
             folderIcon.addEventListener('click', () => {
+                playOpen();
                 const pathToOpen = folderIcon.getAttribute('data-path');
                 if (pathToOpen) shell.openPath(pathToOpen);
             });
@@ -769,7 +883,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         fs.rmSync(clientPath, { recursive: true, force: true });
                         
-                        await updateGameContent(gameId);
+                        await updateGameContent(gameId, false);
                     } catch (err) {
                         console.error(`Failed to delete ${clientName}:`, err);
                         alert(`Failed to delete ${clientName}. Please try again.`);
