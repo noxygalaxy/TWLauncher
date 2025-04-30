@@ -98,7 +98,6 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile('src/index.html');
-  mainWindow.openDevTools();
   mainWindow.once('ready-to-show', async () => {
     if (loadingWindow) {
       loadingWindow.close();
