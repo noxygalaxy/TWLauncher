@@ -48,21 +48,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.querySelector('#search-input');
     const searchBtn = document.querySelector('#search-btn');
     const streamerModeToggle = document.querySelector('#streamer-mode');
+    const enableSoundsToggle = document.querySelector('#enable-sounds');
+    const enableTransitionsToggle = document.querySelector('#enable-transitions');
 
     let currentTheme = 'default';
+    let enableSounds = true;
+    let enableTransitions = true;
 
     function playOpen() {
-        const sound = document.getElementById('openSound');
-        sound.play().catch(error => {
-            console.error('Error playing open sound:', error);
-        });
+        if (enableSounds) {
+            const sound = document.getElementById('openSound');
+            sound.play().catch(error => {
+                console.error('Error playing open sound:', error);
+            });
+        }
     }
     
     function playChange() {
-        const sound = document.getElementById('changeSound');
-        sound.play().catch(error => {
-            console.error('Error playing change sound:', error);
-        });
+        if (enableSounds) {
+            const sound = document.getElementById('changeSound');
+            sound.play().catch(error => {
+                console.error('Error playing change sound:', error);
+            });
+        }
+    }
+
+    function playClick() {
+        if (enableSounds) {
+            const sound = document.getElementById('clickSound');
+            sound.play().catch(error => {
+                console.error('Error playing click sound:', error);
+            });
+        }
     }
 
     setTimeout(() => {
@@ -76,26 +93,82 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     ipcRenderer.invoke('get-initial-settings').then(settings => {
+        console.log('Received initial settings:', settings);
         currentTheme = settings.theme || 'default';
+        enableSounds = settings.enableSounds !== undefined ? settings.enableSounds : true;
+        enableTransitions = settings.enableTransitions !== undefined ? settings.enableTransitions : true;
         themeSelect.value = currentTheme;
         streamerModeToggle.checked = settings.streamerMode || false;
-        document.body.className = `theme-${currentTheme}${settings.streamerMode ? ' streamer-mode' : ''}`;
+        enableSoundsToggle.checked = enableSounds;
+        enableTransitionsToggle.checked = enableTransitions;
+        document.body.className = `theme-${currentTheme}${settings.streamerMode ? ' streamer-mode' : ''}${enableTransitions ? '' : ' no-transitions'}`;
+
+        const header = document.querySelector('.header');
+        const sidebar = document.querySelector('.sidebar');
+        const mainContent = document.querySelector('.main-content');
+
+        if (enableTransitions) {
+            setTimeout(() => {
+                mainContent.classList.add('transition', 'transitionfade');
+                console.log('Main-content classes added:', mainContent.className);
+            }, 100);
+            setTimeout(() => {
+                sidebar.classList.add('transition');
+                console.log('Sidebar classes added:', sidebar.className);
+            }, 350);
+            setTimeout(() => {
+                header.classList.add('transition');
+                console.log('Header classes added:', header.className);
+            }, 600);
+
+            sidebarIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    playChange();
+                    mainContent.classList.remove('transitionfade');
+                    console.log('Main-content fade out:', mainContent.className);
+                    setTimeout(() => {
+                        mainContent.classList.add('transitionfade');
+                        console.log('Main-content fade in:', mainContent.className);
+                    }, 1000);
+                });
+            });
+        } else {
+            header.classList.add('transition');
+            sidebar.classList.add('transition');
+            mainContent.classList.add('transition', 'transitionfade');
+            console.log('Final classes applied (no transitions):', {
+                header: header.className,
+                sidebar: sidebar.className,
+                mainContent: mainContent.className
+            });
+
+            sidebarIcons.forEach(icon => {
+                icon.addEventListener('click', () => {
+                    playChange();
+                    console.log('Sidebar icon clicked (no transitions), main-content unchanged:', mainContent.className);
+                });
+            });
+        }
     });
 
     ipcRenderer.on('initial-game-statuses', (event, gameStatuses) => {
         console.log('Received initial game statuses:', gameStatuses);
         Object.keys(gameStatuses).forEach(gameId => {
-            const sidebarIconMain = document.querySelector(`.sidebar-icon[data-id="${gameId}"]`).parentElement;
-            if (sidebarIconMain) {
-                const statusElement = sidebarIconMain.querySelector('.sidebar-icon-status');
-                if (statusElement) {
-                    statusElement.style.backgroundColor = gameStatuses[gameId] ? '#8B5CF6' : '#ff7777';
-                    statusElement.style.display = 'block';
-                }
-            }
+            updateSidebarStatus(gameId, gameStatuses[gameId]);
         });
         updateGameContent('tw', gameStatuses['tw']);
     });
+
+    function updateSidebarStatus(gameId, isInstalled) {
+        const sidebarIconMain = document.querySelector(`.sidebar-icon[data-id="${gameId}"]`)?.parentElement;
+        if (sidebarIconMain) {
+            const statusElement = sidebarIconMain.querySelector('.sidebar-icon-status');
+            if (statusElement) {
+                statusElement.style.backgroundColor = isInstalled ? '#8B5CF6' : '#ff7777';
+                statusElement.style.display = 'block';
+            }
+        }
+    }
 
     // Easter egg :0
     let versionClickCount = 0;
@@ -280,12 +353,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const newInstallPath = installPathInput.value;
             const newTheme = themeSelect.value;
             const streamerMode = streamerModeToggle.checked;
+            enableSounds = enableSoundsToggle.checked;
+            enableTransitions = enableTransitionsToggle.checked;
             currentTheme = newTheme;
             ipcRenderer.send('save-settings', { 
                 installPath: newInstallPath, 
                 theme: newTheme,
                 streamerMode,
+                enableSounds,
+                enableTransitions
             });
+            document.body.className = `theme-${newTheme}${streamerMode ? ' streamer-mode' : ''}${enableTransitions ? '' : ' no-transitions'}`;
             if (settingsPage) settingsPage.classList.remove('active');
             updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
         });
@@ -346,11 +424,15 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
     });
 
-    ipcRenderer.on('apply-settings', (event, { theme, streamerMode }) => {
-        document.body.className = `theme-${theme}${streamerMode ? ' streamer-mode' : ''}`;
+    ipcRenderer.on('apply-settings', (event, { theme, streamerMode, enableSounds: newEnableSounds, enableTransitions: newEnableTransitions }) => {
+        currentTheme = theme;
+        enableSounds = newEnableSounds !== undefined ? newEnableSounds : true;
+        enableTransitions = newEnableTransitions !== undefined ? newEnableTransitions : true;
+        document.body.className = `theme-${theme}${streamerMode ? ' streamer-mode' : ''}${enableTransitions ? '' : ' no-transitions'}`;
         themeSelect.value = theme;
         streamerModeToggle.checked = streamerMode;
-        currentTheme = theme;
+        enableSoundsToggle.checked = enableSounds;
+        enableTransitionsToggle.checked = enableTransitions;
         updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
     });
 
@@ -752,10 +834,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    async function updateGameContent(gameId) {
+    async function updateGameContent(gameId, forceStatus = null) {
+        console.log('Updating game content for:', gameId);
         const gameData = games[gameId];
-        if (!gameData) return;
-        
+        if (!gameData) {
+            console.error('No game data for:', gameId);
+            return;
+        }
         const folderPath = await getGamePath(gameData);
         const hasFolder = !!folderPath;
         let buttonClass, buttonText, buttonIcon, statusColor;
@@ -827,6 +912,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${hasFolder && gameData.clientName && !gameData.steamAppId ? `<i class="fas fa-trash delete-icon" onclick="playOpen()" data-path="${folderPath || ''}" data-client="${gameData.clientName}"></i>` : ''}
             </div>
         `;
+
+        updateSidebarStatus(gameId, hasFolder);
     
         const actionButton = gameContainer.querySelector(`.${buttonClass}`);
         actionButton.addEventListener('click', async () => {

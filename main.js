@@ -394,9 +394,4 @@ app.on('activate', () => {
 
 app.on('window-all-closed', (event) => {
   event.preventDefault();
-  tray.displayBalloon({
-    title: 'TWLauncher',
-    content: 'Goodbye! <3',
-    icon: path.join(__dirname, 'src', 'assets', 'logos', 'twl.png'),
-  });
 });

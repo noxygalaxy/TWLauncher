@@ -90,14 +90,21 @@
                 <div class="setting-item">
                     <label>Enable Transitions</label>
                     <label class="switch">
-                        <input class="notavailable" id="enable-transitions" checked2>
+                        <input type="checkbox" id="enable-transitions">
                         <span class="slider round"></span>
                     </label>
                 </div>
                 <div class="setting-item">
                     <label>Enable Sounds</label>
                     <label class="switch">
-                        <input class="notavailable" id="enable-sounds" checked2>
+                        <input type="checkbox" id="enable-sounds">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>Test</label>
+                    <label class="switch">
+                        <input class="notavailable" id="testt" checked2>
                         <span class="slider round"></span>
                     </label>
                 </div>
@@ -168,22 +175,8 @@
 
             sidebarIcons.forEach(icon => {
                 icon.addEventListener('click', () => {
-                    mainContent.classList.remove('transitionfade');
-                    mainContent.classList.remove('opacity');
-                    setTimeout(() => {
-                        mainContent.classList.add('transitionfade');
-                    }, 1000);
                 });
             });
-
-            mainContent.classList.add('transition');
-            mainContent.classList.add('opacity');
-            setTimeout(() => {
-                sidebar.classList.add('transition');
-            }, 250);
-            setTimeout(() => {
-                header.classList.add('transition');
-            }, 500);
         });
     </script>
 </body>

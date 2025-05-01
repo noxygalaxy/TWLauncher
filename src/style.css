@@ -8,6 +8,12 @@
   text-decoration: none;
 }
 
+.no-transitions,
+.no-transitions * {
+    transition: none !important;
+    animation: none !important;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -164,8 +170,9 @@ body {
   opacity: 1;
 }
 
-.main-content.opacity {
-  opacity: 1;
+body.no-transitions .main-content {
+  top: 86px !important;
+  opacity: 1 !important;
 }
 
 .app-version {
