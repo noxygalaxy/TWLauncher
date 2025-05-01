@@ -1047,6 +1047,68 @@ input.notavailable + .slider:before {
   transform: scale(1.1);
 }
 
+/* THEMES FOR HEADER */
+.theme-default .header {
+  color: #8B5CF6;
+}
+
+.theme-dark .header {
+  color: #8B5CF6;
+}
+
+.theme-light .header {
+  background-color: #e0e0e0;
+  color: #6B4CC6;
+}
+
+.theme-amoled .header {
+  color: #7700e6;
+}
+
+.theme-pineapple .header {
+  color: #fbc02d;
+}
+
+.theme-grapeseed .header {
+  color: #7b1fa2;
+}
+
+.theme-blueberry .header {
+  color: #1976d2;
+}
+
+.theme-strawberry .header {
+  color: #d32f2f;
+}
+
+.theme-lime .header {
+  color: #689f38;
+}
+
+.theme-mango .header {
+  color: #f57c00;
+}
+
+.theme-ocean .header {
+  color: #0288d1;
+}
+
+.theme-sunset .header {
+  color: #ef6c00;
+}
+
+.theme-galaxy .header {
+  color: #7c4dff;
+}
+
+.theme-neon .header {
+  color: #00e676;
+}
+
+.theme-cyberpunk .header {
+  color: #00e5ff;
+}
+
 /* THEMES */
 .theme-default {
   background-color: #101010;
