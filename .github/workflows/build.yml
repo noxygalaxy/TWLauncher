@@ -36,7 +36,7 @@ jobs:
             ${{ runner.os }}-electron-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Build/release Electron app
         run: npm run build
