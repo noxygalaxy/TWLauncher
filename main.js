@@ -54,6 +54,7 @@ let config = {
   theme: 'default',
   streamerMode: false,
   enableTransitions: true,
+  transitionSpeed: 1,
   enableSounds: true,
 };
 
@@ -97,6 +98,7 @@ function createMainWindow() {
     icon: path.join(__dirname, 'src', 'assets', 'logos', 'twl.png'),
   });
 
+  mainWindow.openDevTools();
   mainWindow.loadFile('src/index.html');
   mainWindow.once('ready-to-show', async () => {
     if (loadingWindow) {
@@ -320,14 +322,15 @@ ipcMain.handle('get-install-path', () => {
   return config.installPath;
 });
 
-ipcMain.on('save-settings', (event, { installPath, theme, streamerMode, enableTransitions, enableSounds }) => {
+ipcMain.on('save-settings', (event, { installPath, theme, streamerMode, enableTransitions, transitionSpeed, enableSounds }) => {
   config.installPath = installPath;
   config.theme = theme;
   config.streamerMode = streamerMode;
   config.enableTransitions = enableTransitions;
+  config.transitionSpeed = parseFloat(transitionSpeed);
   config.enableSounds = enableSounds;
   saveConfig();
-  mainWindow.webContents.send('apply-settings', { theme, streamerMode, enableTransitions, enableSounds });
+  mainWindow.webContents.send('apply-settings', { theme, streamerMode, enableTransitions, transitionSpeed, enableSounds });
 });
 
 ipcMain.handle('get-initial-settings', () => {
@@ -335,6 +338,7 @@ ipcMain.handle('get-initial-settings', () => {
       theme: config.theme,
       streamerMode: config.streamerMode,
       enableTransitions: config.enableTransitions,
+      transitionSpeed: config.transitionSpeed,
       enableSounds: config.enableSounds
   };
 });
@@ -370,6 +374,16 @@ ipcMain.on('hide-window', () => {
 ipcMain.on('launch-game', async (event, clientId) => {
   console.log(`Launching game: ${clientId}`);
   mainWindow.webContents.send('launch-game', clientId);
+});
+
+ipcMain.on('show-update-notification', (event, { clientName, currentVersion, latestVersion }) => {
+  if (tray) {
+      tray.displayBalloon({
+          title: `${clientName} Update Available`,
+          content: `A new version of ${clientName} is available!\nCurrent: ${currentVersion}\nLatest: ${latestVersion}`,
+          icon: path.join(__dirname, 'src', 'assets', 'logos', 'twl.png'),
+      });
+  }
 });
 
 app.whenReady().then(() => {

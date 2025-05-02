@@ -50,10 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const streamerModeToggle = document.querySelector('#streamer-mode');
     const enableSoundsToggle = document.querySelector('#enable-sounds');
     const enableTransitionsToggle = document.querySelector('#enable-transitions');
+    const transitionSpeedSelect = document.querySelector('#transition-speed');
 
     let currentTheme = 'default';
     let enableSounds = true;
     let enableTransitions = true;
+    let transitionSpeed = 1;
 
     function playOpen() {
         if (enableSounds) {
@@ -97,10 +99,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTheme = settings.theme || 'default';
         enableSounds = settings.enableSounds !== undefined ? settings.enableSounds : true;
         enableTransitions = settings.enableTransitions !== undefined ? settings.enableTransitions : true;
+        transitionSpeed = settings.transitionSpeed !== undefined ? parseFloat(settings.transitionSpeed) : 1;
         themeSelect.value = currentTheme;
         streamerModeToggle.checked = settings.streamerMode || false;
         enableSoundsToggle.checked = enableSounds;
         enableTransitionsToggle.checked = enableTransitions;
+        if (transitionSpeedSelect) transitionSpeedSelect.value = transitionSpeed;
         document.body.className = `theme-${currentTheme}${settings.streamerMode ? ' streamer-mode' : ''}${enableTransitions ? '' : ' no-transitions'}`;
 
         const header = document.querySelector('.header');
@@ -111,15 +115,15 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 mainContent.classList.add('transition', 'transitionfade');
                 console.log('Main-content classes added:', mainContent.className);
-            }, 100);
+            }, transitionSpeed * 100);
             setTimeout(() => {
                 sidebar.classList.add('transition');
                 console.log('Sidebar classes added:', sidebar.className);
-            }, 350);
+            }, transitionSpeed * 350);
             setTimeout(() => {
                 header.classList.add('transition');
                 console.log('Header classes added:', header.className);
-            }, 600);
+            }, transitionSpeed * 600);
 
             sidebarIcons.forEach(icon => {
                 icon.addEventListener('click', () => {
@@ -129,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => {
                         mainContent.classList.add('transitionfade');
                         console.log('Main-content fade in:', mainContent.className);
-                    }, 1000);
+                    }, transitionSpeed * 1000);
                 });
             });
         } else {
@@ -269,6 +273,54 @@ document.addEventListener('DOMContentLoaded', () => {
         displayVersion();
     }, 500);
 
+    let notifiedUpdates = new Set();
+
+    async function checkClientUpdates() {
+        try {
+            const installPath = await ipcRenderer.invoke('get-install-path');
+    
+            const tclientData = games['tclient'];
+            const tclientPath = path.join(installPath, tclientData.clientName);
+            if (fs.existsSync(tclientPath)) {
+                const currentTclientVersion = await getClientVersion(tclientPath);
+                const release = await getLatestGitHubRelease(tclientData.githubRepo);
+                const latestTclientVersion = release.tag_name;
+    
+                if (currentTclientVersion && currentTclientVersion !== latestTclientVersion && !notifiedUpdates.has('tclient')) {
+                    console.log(`TClient update available: ${currentTclientVersion} -> ${latestTclientVersion}`);
+                    ipcRenderer.send('show-update-notification', {
+                        clientName: tclientData.clientName,
+                        currentVersion: currentTclientVersion,
+                        latestVersion: latestTclientVersion
+                    });
+                    notifiedUpdates.add('tclient');
+                }
+            }
+
+            const cactusData = games['cactus'];
+            const cactusPath = path.join(installPath, cactusData.clientName);
+            if (fs.existsSync(cactusPath)) {
+                const currentCactusVersion = await getClientVersion(cactusPath);
+                const versionResponse = await axios.get('https://cactus.denchik.top/info');
+                const latestCactusVersion = versionResponse.data.version;
+    
+                if (currentCactusVersion && currentCactusVersion !== latestCactusVersion && !notifiedUpdates.has('cactus')) {
+                    console.log(`Cactus update available: ${currentCactusVersion} -> ${latestCactusVersion}`);
+                    ipcRenderer.send('show-update-notification', {
+                        clientName: cactusData.clientName,
+                        currentVersion: currentCactusVersion,
+                        latestVersion: latestCactusVersion
+                    });
+                    notifiedUpdates.add('cactus');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking client updates:', error);
+        }
+    }
+    checkClientUpdates();
+    setInterval(checkClientUpdates, 60 * 1000);
+
     function showInfoPage() {
         let infoPage = document.querySelector('.info-page');
         if (!infoPage) {
@@ -355,19 +407,60 @@ document.addEventListener('DOMContentLoaded', () => {
             const streamerMode = streamerModeToggle.checked;
             enableSounds = enableSoundsToggle.checked;
             enableTransitions = enableTransitionsToggle.checked;
+            transitionSpeed = parseFloat(transitionSpeedSelect.value);
             currentTheme = newTheme;
             ipcRenderer.send('save-settings', { 
                 installPath: newInstallPath, 
                 theme: newTheme,
                 streamerMode,
                 enableSounds,
-                enableTransitions
+                enableTransitions,
+                transitionSpeed
             });
             document.body.className = `theme-${newTheme}${streamerMode ? ' streamer-mode' : ''}${enableTransitions ? '' : ' no-transitions'}`;
+            updateTransitionSpeeds();
             if (settingsPage) settingsPage.classList.remove('active');
             updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
         });
     }
+
+    function updateTransitionSpeeds() {
+        const styleElement = document.createElement('style');
+        styleElement.innerHTML = `
+          .header.transition {
+            transition: all ${transitionSpeed}s ease;
+          }
+          .sidebar.transition {
+            transition: all ${transitionSpeed * 1.25}s ease;
+          }
+          .main-content {
+            transition: 
+              top ${transitionSpeed * 1.5}s ease,
+              opacity ${transitionSpeed * 0.5}s ease;
+          }
+          .sidebar-icon, .sidebar-icon-main, .sidebar-icon-status {
+            transition: all ${transitionSpeed * 0.3}s ease-in-out;
+          }
+          .settings-page, .content-browser-page, .info-page {
+            transition: opacity ${transitionSpeed * 0.3}s ease;
+          }
+          .music-player {
+            transition: right ${transitionSpeed * 0.5}s ease-in-out, opacity ${transitionSpeed * 0.3}s ease;
+          }
+        `;
+        document.head.appendChild(styleElement);
+    }
+
+    enableTransitionsToggle.addEventListener('change', () => {
+        const transitionSpeedSetting = document.querySelector('#transition-speed-setting');
+        if (enableTransitionsToggle.checked) {
+          transitionSpeedSetting.style.opacity = '1';
+          transitionSpeedSetting.style.pointerEvents = 'auto';
+        } else {
+          transitionSpeedSetting.style.opacity = '0.5';
+          transitionSpeedSetting.style.pointerEvents = 'none';
+        }
+    });
 
     if (addIcon) {
         addIcon.addEventListener('click', () => {
@@ -424,15 +517,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
     });
 
-    ipcRenderer.on('apply-settings', (event, { theme, streamerMode, enableSounds: newEnableSounds, enableTransitions: newEnableTransitions }) => {
+    ipcRenderer.on('apply-settings', (event, { theme, streamerMode, enableSounds: newEnableSounds, enableTransitions: newEnableTransitions, transitionSpeed: newTransitionSpeed }) => {
         currentTheme = theme;
         enableSounds = newEnableSounds !== undefined ? newEnableSounds : true;
         enableTransitions = newEnableTransitions !== undefined ? newEnableTransitions : true;
+        transitionSpeed = newTransitionSpeed !== undefined ? parseFloat(newTransitionSpeed) : 1;
         document.body.className = `theme-${theme}${streamerMode ? ' streamer-mode' : ''}${enableTransitions ? '' : ' no-transitions'}`;
         themeSelect.value = theme;
         streamerModeToggle.checked = streamerMode;
         enableSoundsToggle.checked = enableSounds;
         enableTransitionsToggle.checked = enableTransitions;
+        transitionSpeedSelect.value = transitionSpeed;
+        updateTransitionSpeeds();
         updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
     });
 
@@ -566,6 +662,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
             progressBar.style.width = '100%';
 
+            notifiedUpdates.delete('tclient');
+
             setTimeout(() => updateGameContent('tclient'), 500);
         } catch (err) {
             console.error('Install error:', err);
@@ -637,6 +735,8 @@ document.addEventListener('DOMContentLoaded', () => {
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), latestVersion);
             progressBar.style.width = '100%';
+
+            notifiedUpdates.delete('cactus');
     
             setTimeout(() => updateGameContent('cactus'), 500);
         } catch (err) {
