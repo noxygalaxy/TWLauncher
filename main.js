@@ -98,7 +98,6 @@ function createMainWindow() {
     icon: path.join(__dirname, 'src', 'assets', 'logos', 'twl.png'),
   });
 
-  mainWindow.openDevTools();
   mainWindow.loadFile('src/index.html');
   mainWindow.once('ready-to-show', async () => {
     if (loadingWindow) {
