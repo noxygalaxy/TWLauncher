@@ -35,7 +35,7 @@
 - `axios`: Handles HTTP requests for downloading updates and content.
 - `adm-zip`: Manages ZIP file extraction for client installations.
 - `discord-rpc`: Integrates Discord Rich Presence for status updates.
-- `dotenv`: Loads environment variables (e.g., Discord Client ID, Supabase credentials).
+- `dotenv`: Loads environment variables (e.g., Discord Client ID).
 - `font-awesome`: Provides icons for the user interface.
 - `fs-extra`: Enhanced file system operations for configuration management.
 
@@ -77,7 +77,7 @@
    ```
 6. Find the compiled app in the `dist` folder.
 
-**Note**: Supabase credentials are required for user accounts and achievements. Discord RPC is optional but requires a `DISCORD_CLIENT_ID`.
+**Note**: Discord RPC is optional.
 
 ## Supported Clients
 
