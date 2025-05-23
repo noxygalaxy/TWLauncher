@@ -113,8 +113,8 @@ Please report bugs or suggest features at [GitHub Issues](https://github.com/nox
 - **Made with**: Love and Node.js <3
 - **Special Thanks**: To the Teeworlds community for inspiration :)
 - **More Special Thanks**: 
-  - @sollybunny & @sjrc6 for allowing me use their Tater Client in launcher.
-  - @handerfall for allowing me use their Cactus Client in launcher.
+  - [@sollybunny](https://github.com/sollybunny) & [@sjrc6](https://github.com/sjrc6) for allowing me use their Tater Client in launcher.
+  - [@handerfall](https://github.com/handerfall) for allowing me use their Cactus Client in launcher.
 
 ## License
 
