@@ -2,8 +2,8 @@ const { app, BrowserWindow, Tray, Menu, dialog, ipcMain } = require('electron');
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
-const Registry = require('winreg');
 const DiscordRPC = require('discord-rpc');
+const os = require('os');
 
 let mainWindow;
 let tray = null;
@@ -48,9 +48,9 @@ function updateDiscordActivity(clientId = 'tw', theme = 'default') {
   console.log(`Discord activity updated for ${clientId} with ${theme} theme`);
 }
 
-const configPath = path.join(app.getPath('appData'), 'TWLauncher', 'twlconfig.json');
+const configPath = path.join(app.getPath('userData'), 'twlconfig.json');
 let config = {
-  installPath: path.join(app.getPath('appData'), 'TWLauncher', 'clients'),
+  installPath: path.join(app.getPath('userData'), 'clients'),
   theme: 'default',
   streamerMode: false,
   enableTransitions: true,
@@ -120,82 +120,12 @@ function createMainWindow() {
   });
 }
 
-function getSteamPath() {
-  return new Promise((resolve) => {
-    const registryKey = new Registry({ hive: Registry.HKCU, key: '\\Software\\Valve\\Steam' });
-    registryKey.get('SteamPath', (error, item) => {
-      if (error) {
-        console.error('Error getting Steam path:', error);
-        resolve(null);
-      } else {
-        resolve(item ? item.value : null);
-      }
-    });
-  });
-}
-
-function parseLibraryFolders(steamPath) {
-  try {
-    const vdfPath = path.join(steamPath, 'steamapps', 'libraryfolders.vdf');
-    if (!fs.existsSync(vdfPath)) {
-      console.log('libraryfolders.vdf not found at:', vdfPath);
-      return {};
-    }
-
-    const content = fs.readFileSync(vdfPath, 'utf8');
-    const libraryFolders = {};
-    let currentFolder = null;
-    let inAppsSection = false;
-
-    content.split('\n').forEach(line => {
-      const trimmedLine = line.trim();
-      const folderMatch = trimmedLine.match(/^"(\d+)"$/);
-      if (folderMatch && !inAppsSection) {
-        currentFolder = folderMatch[1];
-        libraryFolders[currentFolder] = { path: '', apps: {} };
-      } else if (currentFolder && trimmedLine.startsWith('"path"')) {
-        const pathMatch = trimmedLine.match(/"path"\s+"(.+)"/);
-        if (pathMatch) libraryFolders[currentFolder].path = pathMatch[1].replace(/\\\\/g, '\\');
-      } else if (trimmedLine === '"apps"') {
-        inAppsSection = true;
-      } else if (trimmedLine === '}' && inAppsSection) {
-        inAppsSection = false;
-      } else if (inAppsSection && trimmedLine.match(/^"(\d+)"/)) {
-        const appMatch = trimmedLine.match(/"(\d+)"\s+"(\d+)"/);
-        if (appMatch) libraryFolders[currentFolder].apps[appMatch[1]] = appMatch[2];
-      }
-    });
-    return libraryFolders;
-  } catch (error) {
-    console.error('Error parsing library folders:', error);
-    return {};
-  }
-}
-
-async function isSteamGameInstalled(steamPath, appId, gameFolder) {
-  try {
-    const directPath = path.join(steamPath, 'steamapps', 'common', gameFolder);
-    if (fs.existsSync(directPath)) return true;
-
-    const libraryFolders = parseLibraryFolders(steamPath);
-    for (const folder in libraryFolders) {
-      if (libraryFolders[folder].apps[appId]) {
-        const gamePath = path.join(libraryFolders[folder].path, 'steamapps', 'common', gameFolder);
-        if (fs.existsSync(gamePath)) return true;
-      }
-    }
-    return false;
-  } catch (error) {
-    console.error('Error checking Steam game installation:', error);
-    return false;
-  }
-}
-
 async function getGamePath(gameId) {
-  const appDataPath = app.getPath('appData');
+  const appDataPath = app.getPath('userData');
+  const isLinux = process.platform === 'linux';
   const games = {
-    'tw': { steamAppId: '380840', steamGameFolder: 'Teeworlds' },
-    'ddnet': { steamAppId: '412220', steamGameFolder: 'DDraceNetwork' },
+    'tw': { clientName: 'Teeworlds', unavailableOnLinux: true },
+    'ddnet': { clientName: 'DDraceNetwork', unavailableOnLinux: true },
     'tclient': { clientName: 'TClient' },
     'cactus': { clientName: 'Cactus' }
   };
@@ -203,15 +133,12 @@ async function getGamePath(gameId) {
   const gameData = games[gameId];
   if (!gameData) return false;
 
-  if (gameData.steamAppId) {
-    const steamPath = await getSteamPath();
-    if (!steamPath) return false;
-    return await isSteamGameInstalled(steamPath, gameData.steamAppId, gameData.steamGameFolder);
-  } else if (gameData.clientName) {
-    const clientPath = path.join(appDataPath, 'TWLauncher', 'clients', gameData.clientName);
-    return fs.existsSync(clientPath);
+  if (isLinux && gameData.unavailableOnLinux) {
+    return false;
   }
-  return false;
+
+  const clientPath = path.join(config.installPath, gameData.clientName);
+  return fs.existsSync(clientPath);
 }
 
 async function getAllGameStatuses() {
@@ -258,11 +185,6 @@ function createTray() {
   buildTrayMenu().then(menu => {
     tray.setContextMenu(menu);
   });
-}
-
-function launchGame(id) {
-  console.log(`Launching game: ${id}`);
-  mainWindow.webContents.send('launch-game', id);
 }
 
 function initializeDiscordRPC() {

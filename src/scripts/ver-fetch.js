@@ -12,9 +12,10 @@ async function compareVersions(currentVersion, newVersion) {
         if (newMain[i] < currMain[i]) return false;
     }
 
-    if (currParts[1] && !newParts[1]) return false;
-    if (!currParts[1] && newParts[1]) return true;
-    if (!currParts[1] && !newParts[1]) return false;
+    // If main versions are equal, stable version is newer than beta
+    if (!currParts[1] && newParts[1]) return false; // Current is stable, new is beta
+    if (currParts[1] && !newParts[1]) return true;  // Current is beta, new is stable
+    if (!currParts[1] && !newParts[1]) return false; // Both stable, versions equal
 
     const currBeta = parseInt(currParts[1].match(/\d+$/)[0], 10);
     const newBeta = parseInt(newParts[1].match(/\d+$/)[0], 10);
