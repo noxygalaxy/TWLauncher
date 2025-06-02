@@ -1,4 +1,4 @@
-name: Build TWLauncher for Windows
+name: Build TWLauncher for Windows and Linux
 
 on:
   push:
@@ -39,7 +39,7 @@ jobs:
         run: npm ci --prefer-offline
 
       - name: Build/release Electron app
-        run: npm run build
+        run: npm run build:win
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -48,3 +48,46 @@ jobs:
         with:
           name: twlauncher-windows
           path: dist/TWLauncher-x64.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache Electron and builder cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+            node_modules/.cache
+          key: ${{ runner.os }}-electron-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline
+
+      - name: Install Linux dependencies
+        run: sudo apt-get update && sudo apt-get install -y libfuse2
+
+      - name: Build/release Electron app
+        run: npm run build:linux
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twlauncher-linux
+          path: dist/TWLauncher-x64.AppImage
