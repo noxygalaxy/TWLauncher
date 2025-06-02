@@ -742,17 +742,17 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '40%';
     
             statusText.textContent = 'Extracting...';
+            const extractPath = installPath;
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
                 try {
-                    execSync(`tar -xJf "${tempZipPath}" -C "${installPath}"`);
+                    execSync(`tar -xJf "${tempZipPath}" -C "${extractPath}"`);
                     progressBar.style.width = '70%';
                 } catch (err) {
                     throw new Error(`Failed to extract tar.xz: ${err.message}`);
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const extractPath = installPath;
                 const totalEntries = zip.getEntries().length;
                 let extractedCount = 0;
                 zip.extractAllToAsync(extractPath, true, (err) => {
@@ -829,17 +829,17 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '40%';
     
             statusText.textContent = 'Extracting...';
+            const extractPath = installPath;
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
                 try {
-                    execSync(`tar -xzf "${tempZipPath}" -C "${installPath}"`);
+                    execSync(`tar -xJf "${tempZipPath}" -C "${extractPath}"`);
                     progressBar.style.width = '70%';
                 } catch (err) {
-                    throw new Error(`Failed to extract tar.gz: ${err.message}`);
+                    throw new Error(`Failed to extract tar.xz: ${err.message}`);
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const extractPath = installPath;
                 const totalEntries = zip.getEntries().length;
                 let extractedCount = 0;
                 zip.extractAllToAsync(extractPath, true, (err) => {
