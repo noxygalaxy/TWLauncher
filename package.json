@@ -55,6 +55,9 @@
         },
         "portable": {
             "artifactName": "${productName}-${arch}.${ext}"
+        },
+        "appImage": {
+            "artifactName": "${productName}-${arch}.AppImage"
         }
     }
 }

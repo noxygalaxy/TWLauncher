@@ -43,11 +43,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: List dist directory
+        run: dir dist
+        shell: cmd
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: twlauncher-windows
           path: dist/TWLauncher-x64.exe
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
 
   build-linux:
     runs-on: ubuntu-latest
@@ -78,16 +86,28 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline
 
-      - name: Install Linux dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfuse2
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libfuse2 squashfs-tools fuse
+          wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /tmp/appimagetool
+          chmod +x /tmp/appimagetool
+          sudo mv /tmp/appimagetool /usr/local/bin/appimagetool
 
       - name: Build/release Electron app
-        run: npm run build:linux
+        run: npm run build:linux -- --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List dist directory
+        run: ls -la dist
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: twlauncher-linux
-          path: dist/TWLauncher-x64.AppImage
+          path: dist/*.AppImage
+          if-no-files-found: error
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
