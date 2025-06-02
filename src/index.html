@@ -51,6 +51,7 @@
             </div>
         </div>
         <div class="app-version" id="app-version">Version: Loading...</div>
+        <div class="update-banner" id="update-banner"></div>
 
         <div class="settings-page">
             <button class="back-btn" onclick="playOpen()"><i class="fas fa-arrow-left"></i></button>
@@ -171,22 +172,11 @@
 
     <script src="scripts/script.js"></script>
     <script src="scripts/audio.js"></script>
+    <script src="scripts/ver-fetch.js"></script>
     <script>
         // Script for minimazing and closing!! yaay :333
         document.querySelector('.min-btn').addEventListener('click', () => ipcRenderer.send('minimize-window'));
         document.querySelector('.close-btn').addEventListener('click', () => ipcRenderer.send('hide-window'));
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const mainContent = document.querySelector('.main-content');
-            const header = document.querySelector('.header');
-            const sidebar  = document.querySelector('.sidebar');
-            const sidebarIcons = document.querySelectorAll('.sidebar-icon');
-
-            sidebarIcons.forEach(icon => {
-                icon.addEventListener('click', () => {
-                });
-            });
-        });
     </script>
 </body>
 </html>

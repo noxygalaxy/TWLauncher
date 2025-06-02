@@ -204,6 +204,38 @@ body.no-transitions .main-content {
   z-index: 500;
 }
 
+.update-banner {
+  position: absolute;
+  bottom: 30px;
+  right: 5px;
+  background-color: #202020;
+  border: 2px solid #8B5CF6;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: #8B5CF6;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  z-index: 501;
+}
+
+.update-banner a.update-link {
+  color: #8B5CF6;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 5px 10px;
+  border: 1px solid #8B5CF6;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.update-banner a.update-link:hover {
+  background-color: #8B5CF6;
+  color: #101010;
+}
+
 .game-container {
   width: 100%;
   height: 100%;
