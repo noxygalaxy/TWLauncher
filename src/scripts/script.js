@@ -658,8 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             statusText.textContent = 'Checking version...';
             const versionResponse = await axios.get('https://cactus.denchik.top/info');
-            const versionData = versionResponse.data;
-            const latestVersion = versionData.version;
+            const latestVersion = versionResponse.data.version;
     
             statusText.textContent = 'Downloading...';
             progressBar.style.width = '0%';
@@ -854,27 +853,18 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '40%';
     
             statusText.textContent = 'Extracting...';
-            const extractPath = installPath;
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
                 try {
-                    execSync(`tar -xJf "${tempZipPath}" -C "${extractPath}"`);
+                    execSync(`tar -zxf "${tempZipPath}" -C "${installPath}"`);
                     progressBar.style.width = '70%';
                 } catch (err) {
-                    throw new Error(`Failed to extract tar.xz: ${err.message}`);
+                    throw new Error(`Failed to extract tar.gz: ${err.message}`);
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const totalEntries = zip.getEntries().length;
-                let extractedCount = 0;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    extractedCount++;
-                    const extractProgress = 40 + Math.round((extractedCount / totalEntries) * 30);
-                    progressBar.style.width = `${extractProgress}%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
@@ -883,12 +873,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
-            if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
-            progressBar.style.width = '90%';
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName && file.includes('teeworlds')) || 'teeworlds-0.7.5-linux_x86_64';
+                console.log('Extracted folders for Teeworlds:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
+                const oldFolderPath = path.join(installPath, extractedFolder);
+                if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
+                if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+            }
+                progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
