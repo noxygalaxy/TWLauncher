@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playOpen() {
         if (enableSounds) {
             const sound = document.getElementById('openSound');
+            sound.volume = enableSounds ? 1 : 0;
             sound.play().catch(error => {
                 console.error('Error playing open sound:', error);
             });
@@ -68,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playChange() {
         if (enableSounds) {
             const sound = document.getElementById('changeSound');
+            sound.volume = enableSounds ? 1 : 0;
             sound.play().catch(error => {
                 console.error('Error playing change sound:', error);
             });
@@ -77,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playClick() {
         if (enableSounds) {
             const sound = document.getElementById('clickSound');
+            sound.volume = enableSounds ? 1 : 0;
             sound.play().catch(error => {
                 console.error('Error playing click sound:', error);
             });
@@ -182,6 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (versionClickCount >= 5) {
             const musicPlayer = document.getElementById('music-player');
             musicPlayer.classList.add('active');
+            musicPlayer.volume = 1;
             versionClickCount = 0;
         }
     });
@@ -395,6 +399,11 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTransitionSpeeds();
             if (settingsPage) settingsPage.classList.remove('active');
             updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
+
+            const musicPlayer = document.getElementById('music-player');
+            if (musicPlayer) {
+                musicPlayer.volume = 1;
+            }
         });
     }
 
