@@ -553,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const release = await getLatestGitHubRelease(gameData.githubRepo);
             const version = release.tag_name;
-            const downloadUrl = process.platform === 'linux' 
+            const downloadUrl = process.platform === 'linux'
                 ? `https://github.com/${gameData.githubRepo}/releases/download/${version}/TClient-ubuntu.tar.xz`
                 : `https://github.com/${gameData.githubRepo}/releases/download/${version}/TClient-windows.zip`;
     
@@ -580,17 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const extractPath = installPath;
-                const totalEntries = zip.getEntries().length;
-                let extractedCount = 0;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    extractedCount++;
-                    const extractProgress = 40 + Math.round((extractedCount / totalEntries) * 30);
-                    progressBar.style.width = `${extractProgress}%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
@@ -599,19 +590,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
+            const extractedFolder = process.platform === 'linux' ? 'TClient' : new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
+            if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}`);
+            }
             progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
             progressBar.style.width = '100%';
-
+    
             notifiedUpdates.delete('tclient');
-
             setTimeout(() => updateGameContent('tclient'), 500);
         } catch (err) {
             console.error('Install error:', err);
@@ -668,15 +661,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const extractPath = installPath;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    progressBar.style.width = `60%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
-                        progressBar.style.width = '70%';
                         resolve();
                     });
                 });
@@ -684,19 +671,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Setting up...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
+            const extractedFolder = process.platform === 'linux' ? 'Cactus' : new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
+            if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}`);
+            }
             progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), latestVersion);
             progressBar.style.width = '100%';
-
-            notifiedUpdates.delete('cactus');
     
+            notifiedUpdates.delete('cactus');
             setTimeout(() => updateGameContent('cactus'), 500);
         } catch (err) {
             console.error('Cactus install error:', err);
@@ -742,27 +731,18 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '40%';
     
             statusText.textContent = 'Extracting...';
-            const extractPath = installPath;
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
                 try {
-                    execSync(`tar -xJf "${tempZipPath}" -C "${extractPath}"`);
+                    execSync(`tar -xJf "${tempZipPath}" -C "${installPath}"`);
                     progressBar.style.width = '70%';
                 } catch (err) {
                     throw new Error(`Failed to extract tar.xz: ${err.message}`);
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const totalEntries = zip.getEntries().length;
-                let extractedCount = 0;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    extractedCount++;
-                    const extractProgress = 40 + Math.round((extractedCount / totalEntries) * 30);
-                    progressBar.style.width = `${extractProgress}%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
