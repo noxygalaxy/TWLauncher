@@ -150,7 +150,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             sidebarIcons.forEach(icon => {
                 icon.addEventListener('click', () => {
-                    playChange();
+                    if (enableSounds) {
+                        const sound = document.getElementById('changeSound');
+                        sound.volume = enableSounds ? 1 : 0;
+                        sound.play().catch(error => {
+                            console.error('Error playing change sound:', error);
+                        });
+                    }
                     console.log('Sidebar icon clicked (no transitions), main-content unchanged:', mainContent.className);
                 });
             });
@@ -1146,7 +1152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusColor = '#ff7777';
             }
         } else if (gameId === 'tw') {
-            const latestVersion = '0.7.5'; // Fixed version for Teeworlds
+            const latestVersion = '0.7.5';
             const currentVersion = hasFolder ? await getClientVersion(folderPath) : null;
             
             if (hasFolder && currentVersion && currentVersion < latestVersion) {
@@ -1211,50 +1217,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionButton = gameContainer.querySelector(`.${buttonClass}`);
         if (buttonClass !== 'unavailable-btn') {
             actionButton.addEventListener('click', async () => {
-                if (gameId === 'cactus') {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                playClick();
+                if (buttonClass === 'install-btn' || buttonClass === 'update-btn') {
+                    if (gameId === 'cactus') {
                         await downloadAndInstallCactus(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch DDNet:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
-                    }
-                } else if (gameId === 'ddnet') {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                    } else if (gameId === 'ddnet') {
                         await downloadAndInstallDDNet(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch DDNet:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
-                    }
-                } else if (gameId === 'tw') {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                    } else if (gameId === 'tw') {
                         await downloadAndInstallTeeworlds(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'teeworlds' : 'teeworlds.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch Teeworlds:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
-                    }
-                } else if (gameData.githubRepo) {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                    } else if (gameData.githubRepo) {
                         await downloadAndInstallTClient(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch DDNet:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
                     }
+                } else if (buttonClass === 'launch-btn' && hasFolder) {
+                    console.log(`Sending launch request for ${gameId}`);
+                    ipcRenderer.send('launch-game', gameId);
                 }
             });
         }

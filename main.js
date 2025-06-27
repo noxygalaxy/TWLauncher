@@ -1,4 +1,5 @@
 const { app, BrowserWindow, Tray, Menu, dialog, ipcMain } = require('electron');
+const { spawn } = require('child_process');
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
@@ -122,23 +123,18 @@ function createMainWindow() {
 
 async function getGamePath(gameId) {
   const appDataPath = app.getPath('userData');
-  const isLinux = process.platform === 'linux';
   const games = {
-    'tw': { clientName: 'Teeworlds', unavailableOnLinux: true },
-    'ddnet': { clientName: 'DDraceNetwork', unavailableOnLinux: true },
-    'tclient': { clientName: 'TClient' },
-    'cactus': { clientName: 'Cactus' }
+    'tw': { clientName: 'Teeworlds', executable: process.platform === 'linux' ? 'teeworlds' : 'teeworlds.exe' },
+    'ddnet': { clientName: 'DDraceNetwork', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
+    'tclient': { clientName: 'TClient', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
+    'cactus': { clientName: 'Cactus', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' }
   };
 
   const gameData = games[gameId];
   if (!gameData) return false;
 
-  if (isLinux && gameData.unavailableOnLinux) {
-    return false;
-  }
-
   const clientPath = path.join(config.installPath, gameData.clientName);
-  return fs.existsSync(clientPath);
+  return fs.existsSync(clientPath) ? clientPath : false;
 }
 
 async function getAllGameStatuses() {
@@ -218,8 +214,62 @@ function initializeDiscordRPC() {
 }
 
 ipcMain.on('launch-game', async (event, gameId) => {
-  console.log(`Launching game: ${gameId}`);
-  mainWindow.webContents.send('launch-game', gameId);
+  console.log(`Received launch request for game: ${gameId}`);
+  const gamePath = await getGamePath(gameId);
+  if (!gamePath) {
+    console.error(`Game path not found for ${gameId}`);
+    mainWindow.webContents.send('launch-error', `Game ${gameId} is not installed or path not found.`);
+    return;
+  }
+
+  const games = {
+    'tw': { executable: process.platform === 'linux' ? 'teeworlds' : 'teeworlds.exe' },
+    'ddnet': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
+    'tclient': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
+    'cactus': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' }
+  };
+
+  const gameData = games[gameId];
+  if (!gameData) {
+    console.error(`No game data for ${gameId}`);
+    mainWindow.webContents.send('launch-error', `No game data for ${gameId}`);
+    return;
+  }
+
+  const clientExe = path.join(gamePath, gameData.executable);
+  if (!fs.existsSync(clientExe)) {
+    console.error(`Executable not found at: ${clientExe}`);
+    mainWindow.webContents.send('launch-error', `Executable not found for ${gameId}`);
+    return;
+  }
+
+  if (process.platform === 'linux') {
+    try {
+      fs.chmodSync(clientExe, '755');
+      console.log(`Set executable permissions for ${clientExe}`);
+    } catch (err) {
+      console.error(`Failed to set permissions for ${clientExe}:`, err);
+      mainWindow.webContents.send('launch-error', `Failed to set permissions for ${gameId}: ${err.message}`);
+      return;
+    }
+  }
+
+  try {
+    const options = {
+      cwd: gamePath,
+      detached: true,
+      stdio: 'ignore'
+    };
+
+    const child = spawn(clientExe, [], options);
+    
+    child.unref();
+
+    console.log(`Launched ${gameId} at ${clientExe} as detached process`);
+  } catch (err) {
+    console.error(`Error launching ${gameId}:`, err);
+    mainWindow.webContents.send('launch-error', `Error launching ${gameId}: ${err.message}`);
+  }
 });
 
 ipcMain.handle('change-install-path', async () => {
@@ -290,11 +340,6 @@ ipcMain.on('hide-window', () => {
     if (rpcReady) {
       rpc.destroy();
     }
-});
-
-ipcMain.on('launch-game', async (event, clientId) => {
-  console.log(`Launching game: ${clientId}`);
-  mainWindow.webContents.send('launch-game', clientId);
 });
 
 ipcMain.on('show-update-notification', (event, { clientName, currentVersion, latestVersion }) => {
