@@ -599,13 +599,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const extractedFolder = process.platform === 'linux' ? 'TClient' : new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'TClient';
+                console.log('Extracted folders:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
             const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
             if (fs.existsSync(oldFolderPath)) {
                 fs.renameSync(oldFolderPath, clientPath);
             } else {
-                throw new Error(`Extracted folder not found at ${oldFolderPath}`);
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
             }
             progressBar.style.width = '90%';
     
@@ -679,14 +688,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 progressBar.style.width = '70%';
             }
     
-            statusText.textContent = 'Setting up...';
-            const extractedFolder = process.platform === 'linux' ? 'Cactus' : new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            statusText.textContent = 'Renaming Folder...';
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'Cactus';
+                console.log('Extracted folders:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
             const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
             if (fs.existsSync(oldFolderPath)) {
                 fs.renameSync(oldFolderPath, clientPath);
             } else {
-                throw new Error(`Extracted folder not found at ${oldFolderPath}`);
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
             }
             progressBar.style.width = '90%';
     
@@ -760,11 +778,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'DDNet';
+                console.log('Extracted folders:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
+            const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
+            if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+            }
             progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
