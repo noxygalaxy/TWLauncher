@@ -1,6 +1,6 @@
 {
     "name": "tw-launcher",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "TWLauncher",
     "main": "main.js",
     "scripts": {
@@ -10,10 +10,7 @@
         "build:linux-appimage": "electron-builder --linux appimage",
         "build:linux-installer": "electron-builder --linux deb"
     },
-    "author": {
-        "name": "changeInBuild",
-        "email": "get@changedin.build"
-    },
+    "author": "changeInBuild <get@changedin.build>",
     "license": "MIT",
     "dependencies": {
         "adm-zip": "^0.5.16",
@@ -55,7 +52,9 @@
                 "portable",
                 {
                     "target": "nsis",
-                    "arch": ["x64"]
+                    "arch": [
+                        "x64"
+                    ]
                 }
             ],
             "icon": "src/assets/logos/twl.ico",
@@ -88,5 +87,10 @@
         "deb": {
             "artifactName": "${productName}-${arch}.${ext}"
         }
-    }
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/noxygalaxy/TWLauncher.git"
+    },
+    "keywords": []
 }
