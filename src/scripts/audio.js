@@ -1,24 +1,3 @@
-function playClick() {
-    const sound = document.getElementById('clickSound');
-    sound.play().catch(error => {
-        console.error('Error playing click sound:', error);
-    });
-}
-
-function playOpen() {
-    const sound = document.getElementById('openSound');
-    sound.play().catch(error => {
-        console.error('Error playing open sound:', error);
-    });
-}
-
-function playChange() {
-    const sound = document.getElementById('changeSound');
-    sound.play().catch(error => {
-        console.error('Error playing change sound:', error);
-    });
-}
-
 const musicPlayer = {
     tracks: [
         { name: 'OneShot OST - On Little Cat Feet', src: 'assets/audio/music/osost_onlcf.mp3' },

@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playOpen() {
         if (enableSounds) {
             const sound = document.getElementById('openSound');
+            sound.volume = enableSounds ? 1 : 0;
             sound.play().catch(error => {
                 console.error('Error playing open sound:', error);
             });
@@ -68,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playChange() {
         if (enableSounds) {
             const sound = document.getElementById('changeSound');
+            sound.volume = enableSounds ? 1 : 0;
             sound.play().catch(error => {
                 console.error('Error playing change sound:', error);
             });
@@ -77,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function playClick() {
         if (enableSounds) {
             const sound = document.getElementById('clickSound');
+            sound.volume = enableSounds ? 1 : 0;
             sound.play().catch(error => {
                 console.error('Error playing click sound:', error);
             });
@@ -147,7 +150,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             sidebarIcons.forEach(icon => {
                 icon.addEventListener('click', () => {
-                    playChange();
+                    if (enableSounds) {
+                        const sound = document.getElementById('changeSound');
+                        sound.volume = enableSounds ? 1 : 0;
+                        sound.play().catch(error => {
+                            console.error('Error playing change sound:', error);
+                        });
+                    }
                     console.log('Sidebar icon clicked (no transitions), main-content unchanged:', mainContent.className);
                 });
             });
@@ -182,6 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (versionClickCount >= 5) {
             const musicPlayer = document.getElementById('music-player');
             musicPlayer.classList.add('active');
+            musicPlayer.volume = 1;
             versionClickCount = 0;
         }
     });
@@ -395,6 +405,11 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTransitionSpeeds();
             if (settingsPage) settingsPage.classList.remove('active');
             updateDiscordRPC(document.querySelector('.sidebar-icon.active')?.getAttribute('id') || 'tw');
+
+            const musicPlayer = document.getElementById('music-player');
+            if (musicPlayer) {
+                musicPlayer.volume = 1;
+            }
         });
     }
 
@@ -553,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const release = await getLatestGitHubRelease(gameData.githubRepo);
             const version = release.tag_name;
-            const downloadUrl = process.platform === 'linux' 
+            const downloadUrl = process.platform === 'linux'
                 ? `https://github.com/${gameData.githubRepo}/releases/download/${version}/TClient-ubuntu.tar.xz`
                 : `https://github.com/${gameData.githubRepo}/releases/download/${version}/TClient-windows.zip`;
     
@@ -580,17 +595,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const extractPath = installPath;
-                const totalEntries = zip.getEntries().length;
-                let extractedCount = 0;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    extractedCount++;
-                    const extractProgress = 40 + Math.round((extractedCount / totalEntries) * 30);
-                    progressBar.style.width = `${extractProgress}%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
@@ -599,19 +605,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'TClient';
+                console.log('Extracted folders:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
+            const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
+            if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+            }
             progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
             progressBar.style.width = '100%';
-
+    
             notifiedUpdates.delete('tclient');
-
             setTimeout(() => updateGameContent('tclient'), 500);
         } catch (err) {
             console.error('Install error:', err);
@@ -641,8 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             statusText.textContent = 'Checking version...';
             const versionResponse = await axios.get('https://cactus.denchik.top/info');
-            const versionData = versionResponse.data;
-            const latestVersion = versionData.version;
+            const latestVersion = versionResponse.data.version;
     
             statusText.textContent = 'Downloading...';
             progressBar.style.width = '0%';
@@ -668,35 +684,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const extractPath = installPath;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    progressBar.style.width = `60%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
-                        progressBar.style.width = '70%';
                         resolve();
                     });
                 });
                 progressBar.style.width = '70%';
             }
     
-            statusText.textContent = 'Setting up...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
+            statusText.textContent = 'Renaming Folder...';
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'Cactus';
+                console.log('Extracted folders:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
+            const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
+            if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+            }
             progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), latestVersion);
             progressBar.style.width = '100%';
-
-            notifiedUpdates.delete('cactus');
     
+            notifiedUpdates.delete('cactus');
             setTimeout(() => updateGameContent('cactus'), 500);
         } catch (err) {
             console.error('Cactus install error:', err);
@@ -742,27 +763,18 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '40%';
     
             statusText.textContent = 'Extracting...';
-            const extractPath = installPath;
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
                 try {
-                    execSync(`tar -xJf "${tempZipPath}" -C "${extractPath}"`);
+                    execSync(`tar -xJf "${tempZipPath}" -C "${installPath}"`);
                     progressBar.style.width = '70%';
                 } catch (err) {
                     throw new Error(`Failed to extract tar.xz: ${err.message}`);
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const totalEntries = zip.getEntries().length;
-                let extractedCount = 0;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    extractedCount++;
-                    const extractProgress = 40 + Math.round((extractedCount / totalEntries) * 30);
-                    progressBar.style.width = `${extractProgress}%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
@@ -771,11 +783,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'DDNet';
+                console.log('Extracted folders:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
+            const oldFolderPath = path.join(installPath, extractedFolder);
             if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
+            if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+            }
             progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
@@ -829,27 +853,18 @@ document.addEventListener('DOMContentLoaded', () => {
             progressBar.style.width = '40%';
     
             statusText.textContent = 'Extracting...';
-            const extractPath = installPath;
             if (process.platform === 'linux') {
                 const { execSync } = require('child_process');
                 try {
-                    execSync(`tar -xJf "${tempZipPath}" -C "${extractPath}"`);
+                    execSync(`tar -zxf "${tempZipPath}" -C "${installPath}"`);
                     progressBar.style.width = '70%';
                 } catch (err) {
-                    throw new Error(`Failed to extract tar.xz: ${err.message}`);
+                    throw new Error(`Failed to extract tar.gz: ${err.message}`);
                 }
             } else {
                 const zip = new AdmZip(tempZipPath);
-                const totalEntries = zip.getEntries().length;
-                let extractedCount = 0;
-                zip.extractAllToAsync(extractPath, true, (err) => {
-                    if (err) throw err;
-                    extractedCount++;
-                    const extractProgress = 40 + Math.round((extractedCount / totalEntries) * 30);
-                    progressBar.style.width = `${extractProgress}%`;
-                });
                 await new Promise((resolve, reject) => {
-                    zip.extractAllToAsync(extractPath, true, (err) => {
+                    zip.extractAllToAsync(installPath, true, (err) => {
                         if (err) return reject(err);
                         resolve();
                     });
@@ -858,12 +873,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     
             statusText.textContent = 'Renaming Folder...';
-            const zip = new AdmZip(tempZipPath);
-            const extractedFolder = zip.getEntries()[0].entryName.split('/')[0];
-            const oldFolderPath = path.join(extractPath, extractedFolder);
-            if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
-            fs.renameSync(oldFolderPath, clientPath);
-            progressBar.style.width = '90%';
+            let extractedFolder;
+            if (process.platform === 'linux') {
+                const extractedFiles = fs.readdirSync(installPath).filter(file => 
+                    fs.statSync(path.join(installPath, file)).isDirectory()
+                );
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName && file.includes('teeworlds')) || 'teeworlds-0.7.5-linux_x86_64';
+                console.log('Extracted folders for Teeworlds:', extractedFiles);
+            } else {
+                extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
+            }
+                const oldFolderPath = path.join(installPath, extractedFolder);
+                if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
+                if (fs.existsSync(oldFolderPath)) {
+                fs.renameSync(oldFolderPath, clientPath);
+            } else {
+                throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+            }
+                progressBar.style.width = '90%';
     
             statusText.textContent = 'Writing Version...';
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
@@ -1127,7 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusColor = '#ff7777';
             }
         } else if (gameId === 'tw') {
-            const latestVersion = '0.7.5'; // Fixed version for Teeworlds
+            const latestVersion = '0.7.5';
             const currentVersion = hasFolder ? await getClientVersion(folderPath) : null;
             
             if (hasFolder && currentVersion && currentVersion < latestVersion) {
@@ -1192,50 +1219,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const actionButton = gameContainer.querySelector(`.${buttonClass}`);
         if (buttonClass !== 'unavailable-btn') {
             actionButton.addEventListener('click', async () => {
-                if (gameId === 'cactus') {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                playClick();
+                if (buttonClass === 'install-btn' || buttonClass === 'update-btn') {
+                    if (gameId === 'cactus') {
                         await downloadAndInstallCactus(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch DDNet:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
-                    }
-                } else if (gameId === 'ddnet') {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                    } else if (gameId === 'ddnet') {
                         await downloadAndInstallDDNet(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch DDNet:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
-                    }
-                } else if (gameId === 'tw') {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                    } else if (gameId === 'tw') {
                         await downloadAndInstallTeeworlds(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'teeworlds' : 'teeworlds.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch Teeworlds:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
-                    }
-                } else if (gameData.githubRepo) {
-                    if (!hasFolder || buttonClass === 'update-btn') {
+                    } else if (gameData.githubRepo) {
                         await downloadAndInstallTClient(actionButton);
-                    } else if (buttonClass === 'launch-btn' && hasFolder) {
-                        const clientExe = path.join(folderPath, gameData.executable || (process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'));
-                        if (fs.existsSync(clientExe)) {
-                            shell.openPath(clientExe).catch(err => console.error('Failed to launch DDNet:', err));
-                        } else {
-                            console.error(`Executable not found at: ${clientExe}`);
-                        }
                     }
+                } else if (buttonClass === 'launch-btn' && hasFolder) {
+                    console.log(`Sending launch request for ${gameId}`);
+                    ipcRenderer.send('launch-game', gameId);
                 }
             });
         }

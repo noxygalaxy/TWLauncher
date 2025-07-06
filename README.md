@@ -12,7 +12,7 @@
 
 ## Screenshots
 
-- **Launcher Interface**  
+- **Launcher Interface** ( changed a bit ) 
   <img src="gh-assets/launcher-image.png" style="border-radius:20px;" alt="TWLauncher Interface">  
 
 ## Features
