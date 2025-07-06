@@ -1,8 +1,3 @@
-!define APP_NAME "TWLauncher"
-!define APP_VERSION "1.2.0"
-!define APP_PUBLISHER "noxygalaxy"
-!define APP_ID "com.noxygalaxy.twlauncher"
-
 !macro customInit
   ; Custom initialization code can go here
 !macroend
@@ -13,7 +8,6 @@
   SetOutPath "$INSTDIR"
   File /r "src\*.*"
   File "main.js"
-  File ".env"
   File "mod.json"
 !macroend
 
@@ -22,6 +16,5 @@
   Delete "$INSTDIR\resources\*.*"
   RMDir "$INSTDIR\resources"
   Delete "$INSTDIR\main.js"
-  Delete "$INSTDIR\.env"
   Delete "$INSTDIR\mod.json"
 !macroend
