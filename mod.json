@@ -1,0 +1,55 @@
+{
+    "installerConfig": {
+        "productName": "${productName}",
+        "appId": "${appId}",
+        "version": "${version}",
+        "copyright": "${copyright}",
+        "icon": "${icon}",
+        "outputDir": "${outputDir}",
+        "files": [
+            "${main}",
+            "src/**/*",
+            "node_modules/**/*",
+            "${packageJson}",
+            "${modJson}"
+        ],
+        "extraFiles": [
+            {
+                "from": "${envFile}",
+                "to": "."
+            }
+        ],
+        "windows": {
+            "portable": {
+                "enabled": true,
+                "artifactName": "${productName}-${arch}.${ext}"
+            },
+            "installer": {
+                "enabled": true,
+                "target": "nsis",
+                "arch": ["x64"],
+                "icon": "${installerIcon}",
+                "uninstallerIcon": "${uninstallerIcon}",
+                "oneClick": false,
+                "allowToChangeInstallationDirectory": true,
+                "createDesktopShortcut": true,
+                "createStartMenuShortcut": true,
+                "shortcutName": "${productName}",
+                "include": "${installerScript}"
+            }
+        },
+        "linux": {
+            "appimage": {
+                "enabled": true,
+                "artifactName": "${productName}-${arch}.AppImage",
+                "category": "${category}"
+            },
+            "installer": {
+                "enabled": true,
+                "target": "deb",
+                "artifactName": "${productName}-${arch}.${ext}",
+                "category": "${category}"
+            }
+        }
+    }
+}

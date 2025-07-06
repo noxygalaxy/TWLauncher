@@ -5,8 +5,10 @@
     "main": "main.js",
     "scripts": {
         "start": "electron .",
-        "build:win": "electron-builder --win portable",
-        "build:linux": "electron-builder --linux appimage"
+        "build:win-portable": "electron-builder --win portable",
+        "build:win-installer": "electron-builder --win nsis",
+        "build:linux-appimage": "electron-builder --linux appimage",
+        "build:linux-installer": "electron-builder --linux deb"
     },
     "author": "noxygalaxy",
     "license": "MIT",
@@ -36,7 +38,8 @@
             "main.js",
             "src/**/*",
             "node_modules/**/*",
-            "package.json"
+            "package.json",
+            "mod.json"
         ],
         "extraFiles": [
             {
@@ -45,11 +48,30 @@
             }
         ],
         "win": {
-            "target": ["portable"],
+            "target": [
+                "portable",
+                {
+                    "target": "nsis",
+                    "arch": ["x64"]
+                }
+            ],
             "icon": "src/assets/logos/twl.ico"
         },
+        "nsis": {
+            "oneClick": false,
+            "allowToChangeInstallationDirectory": true,
+            "installerIcon": "src/assets/logos/twl.ico",
+            "uninstallerIcon": "src/assets/logos/twl.ico",
+            "createDesktopShortcut": true,
+            "createStartMenuShortcut": true,
+            "shortcutName": "TWLauncher",
+            "include": "installer.nsh"
+        },
         "linux": {
-            "target": ["appimage"],
+            "target": [
+                "appimage",
+                "deb"
+            ],
             "icon": "src/assets/logos/twl.png",
             "category": "Utility"
         },
@@ -58,6 +80,9 @@
         },
         "appImage": {
             "artifactName": "${productName}-${arch}.AppImage"
+        },
+        "deb": {
+            "artifactName": "${productName}-${arch}.${ext}"
         }
     }
 }

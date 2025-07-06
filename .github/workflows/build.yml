@@ -38,8 +38,13 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline
 
-      - name: Build/release Electron app
-        run: npm run build:win
+      - name: Build/release Electron app (Portable)
+        run: npm run build:win-portable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build/release Electron app (Installer)
+        run: npm run build:win-installer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -47,11 +52,21 @@ jobs:
         run: dir dist
         shell: cmd
 
-      - name: Upload artifact
+      - name: Upload portable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: twlauncher-windows
+          name: twlauncher-windows-portable
           path: dist/TWLauncher-x64.exe
+          if-no-files-found: warn
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twlauncher-windows-installer
+          path: dist/TWLauncher-Setup-x64.exe
           if-no-files-found: warn
           compression-level: 6
           overwrite: false
@@ -94,20 +109,35 @@ jobs:
           chmod +x /tmp/appimagetool
           sudo mv /tmp/appimagetool /usr/local/bin/appimagetool
 
-      - name: Build/release Electron app
-        run: npm run build:linux -- --publish never
+      - name: Build/release Electron app (AppImage)
+        run: npm run build:linux-appimage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build/release Electron app (Installer)
+        run: npm run build:linux-installer
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: List dist directory
         run: ls -la dist
 
-      - name: Upload artifact
+      - name: Upload AppImage artifact
         uses: actions/upload-artifact@v4
         with:
-          name: twlauncher-linux
+          name: twlauncher-linux-appimage
           path: dist/*.AppImage
           if-no-files-found: error
+          compression-level: 6
+          overwrite: false
+          include-hidden-files: false
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twlauncher-linux-installer
+          path: dist/*.deb
+          if-no-files-found: warn
           compression-level: 6
           overwrite: false
           include-hidden-files: false
