@@ -10,7 +10,10 @@
         "build:linux-appimage": "electron-builder --linux appimage",
         "build:linux-installer": "electron-builder --linux deb"
     },
-    "author": "changeInBuild <get@changedin.build>",
+    "author": {
+        "name": "changeInBuild",
+        "email": "get@changedin.build"
+    },
     "license": "MIT",
     "dependencies": {
         "adm-zip": "^0.5.16",
