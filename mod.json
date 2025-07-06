@@ -34,8 +34,7 @@
                 "allowToChangeInstallationDirectory": true,
                 "createDesktopShortcut": true,
                 "createStartMenuShortcut": true,
-                "shortcutName": "${productName}",
-                "include": "${installerScript}"
+                "shortcutName": "${productName}"
             }
         },
         "linux": {

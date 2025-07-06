@@ -68,8 +68,7 @@
             "uninstallerIcon": "src/assets/logos/twl.ico",
             "createDesktopShortcut": true,
             "createStartMenuShortcut": true,
-            "shortcutName": "TWLauncher",
-            "include": "installer.nsh"
+            "shortcutName": "TWLauncher"
         },
         "linux": {
             "target": [
