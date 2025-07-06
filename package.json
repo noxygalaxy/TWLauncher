@@ -10,7 +10,10 @@
         "build:linux-appimage": "electron-builder --linux appimage",
         "build:linux-installer": "electron-builder --linux deb"
     },
-    "author": "noxygalaxy",
+    "author": {
+        "name": "changeInBuild",
+        "email": "get@changedin.build"
+    },
     "license": "MIT",
     "dependencies": {
         "adm-zip": "^0.5.16",
@@ -55,7 +58,8 @@
                     "arch": ["x64"]
                 }
             ],
-            "icon": "src/assets/logos/twl.ico"
+            "icon": "src/assets/logos/twl.ico",
+            "artifactName": "${productName}-Setup.${ext}"
         },
         "nsis": {
             "oneClick": false,
@@ -73,7 +77,8 @@
                 "deb"
             ],
             "icon": "src/assets/logos/twl.png",
-            "category": "Utility"
+            "category": "Utility",
+            "maintainer": "${author.name} <${author.email}>"
         },
         "portable": {
             "artifactName": "${productName}-${arch}.${ext}"
