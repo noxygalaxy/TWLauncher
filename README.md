@@ -8,7 +8,7 @@
   <img src="https://img.shields.io/github/created-at/noxygalaxy/twlauncher?style=for-the-badge" alt="Created At"/>  
 </div>
 
-**TWLauncher** (Teeworlds Launcher, or TWL) is a Windows application designed to simplify the management and launching of various Teeworlds clients. With a cool, modern interface, it supports popular clients & automatic updates.
+**TWLauncher** (Teeworlds Launcher, or TWL) is a application designed to simplify the management and launching of various Teeworlds clients. With a cool, modern interface, it supports popular clients & automatic updates.
 
 ## Screenshots
 
@@ -25,7 +25,7 @@
 - **Auto Updates**: Checks and updates non-Steam clients to their latest versions.
 - **Discord RPC**: Displays your current client and theme on Discord.
 - **Content Browser**: Browse and download skins, game skins, emoticons, particles, and entities from teedata.net.
-- **Cross-Platform Potential**: Built with Electron, enabling future multi-platform support (currently Windows-focused).
+- **Cross-Platform Potential**: Built with Electron, enabling future multi-platform support for Windows and Linux.
 
 ## Dependencies
 
@@ -43,7 +43,7 @@
 
 1. Download the latest release from [GitHub Releases](https://github.com/noxygalaxy/twlauncher/releases).
 2. Run the installer or extract the portable version.
-3. Launch `TWLauncher-x64.exe` to start the application.
+3. Launch `TWLauncher-x64.exe` ( or `TWLauncher-x86_64.AppImage` on linux ) to start the application.
 
 ## Usage
 
@@ -88,9 +88,9 @@
 
 ## Configuration
 
-TWLauncher stores its configuration in `twlconfig.json` located at `C:\Users\<YourUser>\AppData\Roaming\TWLauncher`. You can modify:
+TWLauncher stores its configuration in `twlconfig.json` located at `C:\Users\<YourUser>\AppData\Roaming\tw-launcher` or at `/home/<YourUser>/.config/tw-launcher in linux.`. You can modify:
 
-- **installPath**: Directory where non-Steam clients are installed (default: `AppData\TWLauncher\clients`).
+- **installPath**: Directory where non-Steam clients are installed (default: `AppData\Roaming\tw-launcher\clients`).
 - **theme**: UI theme (e.g., `default`, customizable via settings).
 - **streamerMode**: For now just hides installation path in settings. (default: `false`)
 
