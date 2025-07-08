@@ -154,8 +154,8 @@ jobs:
 
       - name: Build Flatpak
         run: |
-          flatpak-builder --user --force-clean --repo=repo build-dir com.twlauncher.TWLauncher.json
-          flatpak build-bundle repo dist/TWLauncher.flatpak com.twlauncher.TWLauncher
+          flatpak-builder --force-clean --repo=repo build-dir com.noxygalaxy.TWLauncher.json
+          flatpak build-bundle repo dist/TWLauncher.flatpak com.noxygalaxy.TWLauncher
         env:
           DEBIAN_FRONTEND: noninteractive
 
