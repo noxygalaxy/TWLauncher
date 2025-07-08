@@ -23,7 +23,7 @@
         "npm run build:linux-appimage",
         "mkdir -p /app/bin",
         "cp -r dist/linux-unpacked/* /app/bin/",
-        "ln -s /app/bin/twlauncher /app/bin/twlauncher",
+        "ln -sf /app/bin/twlauncher /app/bin/twlauncher",
         "install -Dm644 src/assets/logos/twl.png /app/share/icons/hicolor/256x256/apps/com.noxygalaxy.twlauncher.png",
         "install -Dm644 com.noxygalaxy.twlauncher.desktop /app/share/applications/com.noxygalaxy.twlauncher.desktop"
       ],
@@ -34,7 +34,7 @@
         },
         {
           "type": "file",
-          "path": "com.noxygalaxy.twlauncher.desktop"
+          "path": "./com.noxygalaxy.twlauncher.desktop"
         }
       ]
     }
