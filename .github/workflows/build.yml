@@ -111,11 +111,16 @@ jobs:
       - name: Install Linux build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfuse2 squashfs-tools fuse flatpak flatpak-builder
+          sudo apt-get install -y --no-install-recommends \
+            libfuse2 squashfs-tools flatpak flatpak-builder
+          sudo apt-get remove -y fuse3 || true
+          sudo apt-get install -y --no-install-recommends fuse
           wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /tmp/appimagetool
           chmod +x /tmp/appimagetool
           sudo mv /tmp/appimagetool /usr/local/bin/appimagetool
           flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+        env:
+          DEBIAN_FRONTEND: noninteractive
 
       - name: Set author info
         run: |
