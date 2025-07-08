@@ -140,6 +140,28 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
 
+      - name: Debug repository contents
+        run: |
+          echo "Listing all files in repository:"
+          find . -type f
+          echo "Current working directory:"
+          pwd
+
+      - name: Verify Flatpak manifest and desktop file
+        run: |
+          MANIFEST_PATH="com.noxygalaxy.twlauncher.json"
+          DESKTOP_PATH="com.noxygalaxy.twlauncher.desktop"
+          if [ ! -f "$MANIFEST_PATH" ]; then
+            echo "Error: Flatpak manifest $MANIFEST_PATH not found"
+            exit 1
+          fi
+          if [ ! -f "$DESKTOP_PATH" ]; then
+            echo "Error: Desktop file $DESKTOP_PATH not found"
+            exit 1
+          fi
+          echo "Flatpak manifest found at $MANIFEST_PATH"
+          echo "Desktop file found at $DESKTOP_PATH"
+
       - name: Set author info
         run: |
           npm pkg set author.name="${{ github.actor }}"
