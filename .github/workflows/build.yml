@@ -112,12 +112,24 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libfuse2 squashfs-tools flatpak flatpak-builder
+            libfuse2 squashfs-tools fuse
           sudo apt-get remove -y fuse3 || true
-          sudo apt-get install -y --no-install-recommends fuse
+          sudo apt-get install -y --no-install-recommends \
+            flatpak flatpak-builder
           wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /tmp/appimagetool
           chmod +x /tmp/appimagetool
           sudo mv /tmp/appimagetool /usr/local/bin/appimagetool
+        env:
+          DEBIAN_FRONTEND: noninteractive
+
+      - name: Verify Flatpak installation
+        run: |
+          flatpak --version || { echo "Flatpak installation failed"; exit 1; }
+          flatpak-builder --version || { echo "Flatpak-builder installation failed"; exit 1; }
+          which flatpak || { echo "Flatpak binary not found in PATH"; exit 1; }
+
+      - name: Install Flatpak runtimes
+        run: |
           flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
         env:
           DEBIAN_FRONTEND: noninteractive
