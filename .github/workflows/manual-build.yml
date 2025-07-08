@@ -125,13 +125,13 @@ jobs:
 
       - name: Add Flathub repository
         run: |
-          flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
         env:
           DEBIAN_FRONTEND: noninteractive
 
       - name: Install Flatpak runtimes
         run: |
-          flatpak install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
+          flatpak --user install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -154,8 +154,10 @@ jobs:
 
       - name: Build Flatpak
         run: |
-          flatpak-builder --force-clean --repo=repo build-dir com.twlauncher.TWLauncher.json
+          flatpak-builder --user --force-clean --repo=repo build-dir com.twlauncher.TWLauncher.json
           flatpak build-bundle repo dist/TWLauncher.flatpak com.twlauncher.TWLauncher
+        env:
+          DEBIAN_FRONTEND: noninteractive
 
       - name: List dist directory
         run: ls -la dist
