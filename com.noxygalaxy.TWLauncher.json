@@ -1,5 +1,5 @@
 {
-  "id": "com.noxygalaxy.twlauncher",
+  "id": "com.noxygalaxy.TWLauncher",
   "runtime": "org.freedesktop.Platform",
   "runtime-version": "23.08",
   "sdk": "org.freedesktop.Sdk",
@@ -11,8 +11,7 @@
     "--socket=pulseaudio",
     "--share=network",
     "--device=dri",
-    "--filesystem=home",
-    "--talk-name=org.freedesktop.Notifications"
+    "--filesystem=home:ro"
   ],
   "modules": [
     {
@@ -23,18 +22,15 @@
         "npm run build:linux-appimage",
         "mkdir -p /app/bin",
         "cp -r dist/linux-unpacked/* /app/bin/",
-        "ln -sf /app/bin/twlauncher /app/bin/twlauncher",
-        "install -Dm644 src/assets/logos/twl.png /app/share/icons/hicolor/256x256/apps/com.noxygalaxy.twlauncher.png",
-        "install -Dm644 com.noxygalaxy.twlauncher.desktop /app/share/applications/com.noxygalaxy.twlauncher.desktop"
+        "ln -s /app/bin/twlauncher /app/bin/twlauncher",
+        "install -Dm644 twlauncher.png /app/share/icons/hicolor/256x256/apps/com.noxygalaxy.TWLauncher.png",
+        "install -Dm644 com.noxygalaxy.TWLauncher.desktop /app/share/applications/com.noxygalaxy.TWLauncher.desktop",
+        "install -Dm644 appdata/com.noxygalaxy.TWLauncher.metainfo.xml /app/share/metainfo/com.noxygalaxy.TWLauncher.metainfo.xml"
       ],
       "sources": [
         {
           "type": "dir",
           "path": "."
-        },
-        {
-          "type": "file",
-          "path": "./com.noxygalaxy.twlauncher.desktop"
         }
       ]
     }

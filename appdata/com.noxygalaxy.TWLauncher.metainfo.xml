@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.noxygalaxy.TWLauncher</id>
+  <name>TWLauncher</name>
+  <summary>Launcher for most popular Teeworlds clients.</summary>
+  <description>
+    <p>TWLauncher (Teeworlds Launcher, or TWL) is a application designed to simplify the management and launching of various Teeworlds clients. With a cool, modern interface, it supports popular clients & automatic updates.</p>
+  </description>
+  <categories>
+    <category>Utility</category>
+  </categories>
+  <launchable type="desktop-id">com.noxygalaxy.TWLauncher.desktop</launchable>
+  <icon type="stock" height="256" width="256">com.noxygalaxy.TWLauncher</icon>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://raw.githubusercontent.com/noxygalaxy/TWLauncher/main/gh-assets/launcher-image.png</image>
+    </screenshot>
+  </screenshots>
+  <url type="homepage">TWLauncher.netlify.app</url>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <releases>
+    <release version="1.2.1" date="2025-07-06"/>
+  </releases>
+</component>
