@@ -140,27 +140,14 @@ jobs:
         env:
           DEBIAN_FRONTEND: noninteractive
 
-      - name: Debug repository contents
+      - name: Verify Flatpak manifest
         run: |
-          echo "Listing all files in repository:"
-          find . -type f
-          echo "Current working directory:"
-          pwd
-
-      - name: Verify Flatpak manifest and desktop file
-        run: |
-          MANIFEST_PATH="com.noxygalaxy.twlauncher.json"
-          DESKTOP_PATH="com.noxygalaxy.twlauncher.desktop"
+          MANIFEST_PATH="com.noxygalaxy.TWLauncher.json"
           if [ ! -f "$MANIFEST_PATH" ]; then
             echo "Error: Flatpak manifest $MANIFEST_PATH not found"
             exit 1
           fi
-          if [ ! -f "$DESKTOP_PATH" ]; then
-            echo "Error: Desktop file $DESKTOP_PATH not found"
-            exit 1
-          fi
           echo "Flatpak manifest found at $MANIFEST_PATH"
-          echo "Desktop file found at $DESKTOP_PATH"
 
       - name: Set author info
         run: |
@@ -181,8 +168,10 @@ jobs:
 
       - name: Build Flatpak
         run: |
-          flatpak-builder --force-clean --repo=repo build-dir com.noxygalaxy.TWLauncher.json
+          flatpak-builder --user --force-clean --repo=repo build-dir com.noxygalaxy.TWLauncher.json
           flatpak build-bundle repo dist/TWLauncher.flatpak com.noxygalaxy.TWLauncher
+        env:
+          DEBIAN_FRONTEND: noninteractive
 
       - name: List dist directory
         run: ls -la dist
