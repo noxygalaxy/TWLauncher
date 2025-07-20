@@ -127,7 +127,8 @@ async function getGamePath(gameId) {
     'tw': { clientName: 'Teeworlds', executable: process.platform === 'linux' ? 'teeworlds' : 'teeworlds.exe' },
     'ddnet': { clientName: 'DDraceNetwork', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
     'tclient': { clientName: 'TClient', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
-    'cactus': { clientName: 'Cactus', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' }
+    'cactus': { clientName: 'Cactus', executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
+    'chillerbot-ux': { clientName: 'chillerbot-ux', executable: process.platform === 'linux' ? 'chillerbot-ux' : 'chillerbot-ux.exe' }
   };
 
   const gameData = games[gameId];
@@ -138,7 +139,7 @@ async function getGamePath(gameId) {
 }
 
 async function getAllGameStatuses() {
-  const gameIds = ['tw', 'ddnet', 'tclient', 'cactus'];
+  const gameIds = ['tw', 'ddnet', 'tclient', 'cactus', 'chillerbot-ux'];
   const statuses = {};
   for (const gameId of gameIds) {
     const isInstalled = await getGamePath(gameId);
@@ -226,7 +227,8 @@ ipcMain.on('launch-game', async (event, gameId) => {
     'tw': { executable: process.platform === 'linux' ? 'teeworlds' : 'teeworlds.exe' },
     'ddnet': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
     'tclient': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
-    'cactus': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' }
+    'cactus': { executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe' },
+    'chillerbot-ux': { executable: process.platform === 'linux' ? 'chillerbot-ux' : 'chillerbot-ux.exe' }
   };
 
   const gameData = games[gameId];

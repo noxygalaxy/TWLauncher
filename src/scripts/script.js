@@ -247,6 +247,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            const chillerbotUxData = games['chillerbot-ux'];
+            const chillerbotUxPath = path.join(installPath, tclientData.clientName);
+            if (fs.existsSync(chillerbotUxPath)) {
+                const currentChillerbotUxVersion = await getClientVersion(chillerbotUxPath);
+                const release = await getLatestGitHubRelease(chillerbotUxData.githubRepo);
+                const latestChillerbotUxVersion = release.tag_name;
+    
+                if (currentChillerbotUxVersion && currentChillerbotUxVersion !== latestChillerbotUxVersion && !notifiedUpdates.has('chillerbot-ux')) {
+                    console.log(`chillerbot-ux update available: ${currentChillerbotUxVersion} -> ${latestChillerbotUxVersion}`);
+                    ipcRenderer.send('show-update-notification', {
+                        clientName: chillerbotUxData.clientName,
+                        currentVersion: currentChillerbotUxVersion,
+                        latestVersion: latestChillerbotUxVersion
+                    });
+                    notifiedUpdates.add('chillerbot-ux');
+                }
+            }
+
             const cactusData = games['cactus'];
             const cactusPath = path.join(installPath, cactusData.clientName);
             if (fs.existsSync(cactusPath)) {
@@ -550,11 +568,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return fs.existsSync(versionFile) ? fs.readFileSync(versionFile, 'utf8').trim() : null;
     }
 
-    async function downloadAndInstallTClient(button) {
-        const gameData = games['tclient'];
+    async function downloadAndInstallFromGithub(button, clientName, folderName) {
+        const gameData = games[clientName];
         const installPath = await ipcRenderer.invoke('get-install-path');
         const clientPath = path.join(installPath, gameData.clientName);
-        const tempZipPath = path.join(os.tmpdir(), process.platform === 'linux' ? 'TClient-ubuntu.tar.xz' : 'TClient-windows.zip');
+        const tempZipPath = path.join(os.tmpdir(), process.platform === 'linux' ? `${folderName}-ubuntu.tar.xz` : `${folderName}-windows.zip`);
     
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INSTALLING...';
         button.disabled = true;
@@ -569,8 +587,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const release = await getLatestGitHubRelease(gameData.githubRepo);
             const version = release.tag_name;
             const downloadUrl = process.platform === 'linux'
-                ? `https://github.com/${gameData.githubRepo}/releases/download/${version}/TClient-ubuntu.tar.xz`
-                : `https://github.com/${gameData.githubRepo}/releases/download/${version}/TClient-windows.zip`;
+                ? `https://github.com/${gameData.githubRepo}/releases/download/${version}/${folderName}-ubuntu.tar.xz`
+                : `https://github.com/${gameData.githubRepo}/releases/download/${version}/${folderName}-windows.zip`;
     
             statusText.textContent = 'Downloading...';
             progressBar.style.width = '0%';
@@ -610,7 +628,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const extractedFiles = fs.readdirSync(installPath).filter(file => 
                     fs.statSync(path.join(installPath, file)).isDirectory()
                 );
-                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || 'TClient';
+                extractedFolder = extractedFiles.find(file => file !== gameData.clientName) || folderName;
                 console.log('Extracted folders:', extractedFiles);
             } else {
                 extractedFolder = new AdmZip(tempZipPath).getEntries()[0].entryName.split('/')[0];
@@ -628,8 +646,8 @@ document.addEventListener('DOMContentLoaded', () => {
             fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
             progressBar.style.width = '100%';
     
-            notifiedUpdates.delete('tclient');
-            setTimeout(() => updateGameContent('tclient'), 500);
+            notifiedUpdates.delete(clientName);
+            setTimeout(() => updateGameContent(clientName), 500);
         } catch (err) {
             console.error('Install error:', err);
             statusText.textContent = 'Installation Failed';
@@ -638,6 +656,14 @@ document.addEventListener('DOMContentLoaded', () => {
             button.disabled = false;
             button.innerHTML = '<i class="fas fa-download"></i> INSTALL';
         }
+    }
+
+    async function downloadAndInstallTClient(button) {
+		downloadAndInstallFromGithub(button, 'tclient', 'TClient')
+    }
+
+    async function downloadAndInstallChillerbotUx(button) {
+		downloadAndInstallFromGithub(button, 'chillerbot-ux', 'chillerbot-ux')
     }
 
     async function downloadAndInstallCactus(button) {
@@ -1227,8 +1253,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         await downloadAndInstallDDNet(actionButton);
                     } else if (gameId === 'tw') {
                         await downloadAndInstallTeeworlds(actionButton);
-                    } else if (gameData.githubRepo) {
+                    } else if (gameId === 'tclient') {
                         await downloadAndInstallTClient(actionButton);
+                    } else if (gameId === 'chillerbot-ux') {
+                        await downloadAndInstallChillerbotUx(actionButton);
                     }
                 } else if (buttonClass === 'launch-btn' && hasFolder) {
                     console.log(`Sending launch request for ${gameId}`);
@@ -1309,13 +1337,14 @@ document.addEventListener('DOMContentLoaded', () => {
             clientName: 'Cactus',
             executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'
         },
-        'cbux': {
-            logo: 'assets/fulllogos/cbux.png',
-            image: 'assets/bgs/cbux.png',
-            smallName: 'cbux',
+        'chillerbot-ux': {
+            logo: 'assets/fulllogos/chillerbot-ux.png',
+            image: 'assets/bgs/chillerbot-ux.png',
+            smallName: 'ux',
             icon: 'https://avatars.githubusercontent.com/u/45486474',
-            clientName: 'ChillerBoxUX',
-            executable: process.platform === 'linux' ? 'DDNet' : 'DDNet.exe'
+            clientName: 'chillerbot-ux',
+            githubRepo: 'chillerbot/chillerbot-ux',
+            executable: process.platform === 'linux' ? 'chillerbot-ux' : 'chillerbot-ux.exe'
         }
     };
 
