@@ -658,20 +658,119 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+async function downloadAndInstallFromGithubCBUX(button, clientName, folderName) {
+    const gameData = games[clientName];
+    const installPath = await ipcRenderer.invoke('get-install-path');
+    const clientPath = path.join(installPath, gameData.clientName);
+    const tempZipPath = path.join(os.tmpdir(), `${folderName}-windows.zip`);
+    const tempExtractPath = path.join(os.tmpdir(), `${folderName}-temp-extract`);
+
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INSTALLING...';
+    button.disabled = true;
+    const progressBar = button.querySelector('.progress-bar') || document.createElement('div');
+    progressBar.className = 'progress-bar';
+    button.appendChild(progressBar);
+    const statusText = button.parentElement.querySelector('.status-text') || document.createElement('div');
+    statusText.className = 'status-text';
+    button.parentElement.appendChild(statusText);
+
+    try {
+        const release = await getLatestGitHubRelease(gameData.githubRepo);
+        const version = release.tag_name;
+        const downloadUrl = `https://github.com/${gameData.githubRepo}/releases/download/${version}/${folderName}-windows.zip`;
+
+        statusText.textContent = 'Downloading...';
+        progressBar.style.width = '0%';
+        const response = await axios.get(downloadUrl, {
+            responseType: 'arraybuffer',
+            onDownloadProgress: (progressEvent) => {
+                const percentCompleted = Math.round((progressEvent.loaded * 40) / progressEvent.total);
+                progressBar.style.width = `${percentCompleted}%`;
+            }
+        });
+        fs.writeFileSync(tempZipPath, Buffer.from(response.data));
+        progressBar.style.width = '40%';
+
+        statusText.textContent = 'Extracting outer archive...';
+        const outerZip = new AdmZip(tempZipPath);
+        await new Promise((resolve, reject) => {
+            outerZip.extractAllToAsync(tempExtractPath, true, (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+        progressBar.style.width = '60%';
+
+        statusText.textContent = 'Extracting nested archive...';
+        const extractedFiles = fs.readdirSync(tempExtractPath);
+        const nestedZip = extractedFiles.find(file => file.endsWith('.zip'));
+        if (!nestedZip) {
+            throw new Error('No nested zip file found in extracted content');
+        }
+        const nestedZipPath = path.join(tempExtractPath, nestedZip);
+        const nestedZipObj = new AdmZip(nestedZipPath);
+        await new Promise((resolve, reject) => {
+            nestedZipObj.extractAllToAsync(installPath, true, (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+        progressBar.style.width = '70%';
+
+        statusText.textContent = 'Renaming Folder...';
+        const extractedFolders = fs.readdirSync(installPath).filter(file => 
+            fs.statSync(path.join(installPath, file)).isDirectory()
+        );
+        const extractedFolder = extractedFolders.find(file => file !== gameData.clientName) || folderName;
+        const oldFolderPath = path.join(installPath, extractedFolder);
+        
+        if (fs.existsSync(clientPath)) fs.rmSync(clientPath, { recursive: true });
+        if (fs.existsSync(oldFolderPath)) {
+            fs.renameSync(oldFolderPath, clientPath);
+        } else {
+            throw new Error(`Extracted folder not found at ${oldFolderPath}. Available folders: ${fs.readdirSync(installPath).join(', ')}`);
+        }
+        progressBar.style.width = '90%';
+
+        statusText.textContent = 'Writing Version...';
+        fs.writeFileSync(path.join(clientPath, 'clientver.txt'), version);
+        progressBar.style.width = '100%';
+
+        notifiedUpdates.delete(clientName);
+        setTimeout(() => updateGameContent(clientName), 500);
+
+        if (fs.existsSync(tempExtractPath)) {
+            fs.rmSync(tempExtractPath, { recursive: true });
+        }
+    } catch (err) {
+        console.error('Install error:', err);
+        statusText.textContent = 'Installation Failed';
+        progressBar.style.width = '0%';
+    } finally {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-download"></i> INSTALL';
+        if (fs.existsSync(tempZipPath)) {
+            fs.unlinkSync(tempZipPath);
+        }
+    }
+}
+
     async function downloadAndInstallTClient(button) {
 		downloadAndInstallFromGithub(button, 'tclient', 'TClient')
     }
 
     async function downloadAndInstallChillerbotUx(button) {
-		downloadAndInstallFromGithub(button, 'chillerbot-ux', 'chillerbot-ux')
+		downloadAndInstallFromGithubCBUX(button, 'chillerbot-ux', 'chillerbot-ux')
     }
 
     async function downloadAndInstallCactus(button) {
         const gameData = games['cactus'];
+        const versionResponse = await axios.get('https://cactus.denchik.top/info');
+        const latestVersion = versionResponse.data.version;
         const installPath = await ipcRenderer.invoke('get-install-path');
         const clientPath = path.join(installPath, gameData.clientName);
-        const tempZipPath = path.join(os.tmpdir(), process.platform === 'linux' ? 'CactusClient.tar.xz' : 'Cactus-windows.zip');
-    
+        const tempZipPath = path.join(os.tmpdir(), process.platform === 'linux' ? 'CactusClient.tar.xz' : `Cactus-${latestVersion}-public-win64.zip`);
+
         button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INSTALLING...';
         button.disabled = true;
         const progressBar = button.querySelector('.progress-bar') || document.createElement('div');
@@ -682,13 +781,13 @@ document.addEventListener('DOMContentLoaded', () => {
         button.parentElement.appendChild(statusText);
     
         try {
-            statusText.textContent = 'Checking version...';
+            statusText.textContent = 'Checking version';
             const versionResponse = await axios.get('https://cactus.denchik.top/info');
             const latestVersion = versionResponse.data.version;
     
             statusText.textContent = 'Downloading...';
             progressBar.style.width = '0%';
-            const downloadUrl = process.platform === 'linux' ? 'https://cactus.denchik.top/linux' : 'https://cactus.denchik.top/windows';
+            const downloadUrl = process.platform === 'linux' ? 'https://cactus.denchik.top/linux' : `https://dw.cactuss.top/${latestVersion}/Cactus-${latestVersion}-public-win64.zip`;
             const response = await axios.get(downloadUrl, {
                 responseType: 'arraybuffer',
                 onDownloadProgress: (progressEvent) => {

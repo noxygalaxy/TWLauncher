@@ -81,7 +81,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 40px;
+  gap: 23px;
   transition: all 1.25s ease;
 }
 
@@ -647,7 +647,7 @@ body.no-transitions .main-content {
   background-color: transparent;
   margin-top: 65px;
   position: relative;
-  top: 25px;
+  top: 10px;
   cursor: pointer;
   transition: all 0.3s;
 }
