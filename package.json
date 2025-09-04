@@ -1,6 +1,6 @@
 {
     "name": "tw-launcher",
-    "version": "1.2.2",
+    "version": "1.2.2-beta.1",
     "description": "TWLauncher",
     "main": "main.js",
     "scripts": {

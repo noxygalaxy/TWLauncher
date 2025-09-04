@@ -84,6 +84,7 @@
 - **Teeworlds** (`tw`): Steam-based, launches via `steam://rungameid/380840`.
 - **DDraceNetwork** (`ddnet`): Steam-based, launches via `steam://rungameid/412220`.
 - **Tater Client** (`tclient`): Downloaded from [sjrc6/TaterClient-ddnet](https://github.com/sjrc6/TaterClient-ddnet).
+- **Chillerbot-UX** (`chillerbot-ux`): Downloaded from [chillerbot/chillerbot-ux](https://github.com/chillerbot/chillerbot-ux)
 - **Cactus Client** (`cactus`): Downloaded from other source.
 
 ## Configuration
@@ -115,6 +116,7 @@ Please report bugs or suggest features at [GitHub Issues](https://github.com/nox
 - **More Special Thanks**: 
   - [@sollybunny](https://github.com/sollybunny) & [@sjrc6](https://github.com/sjrc6) for allowing me use their Tater Client in launcher.
   - [@handerfall](https://github.com/handerfall) for allowing me use their Cactus Client in launcher.
+  - [@chillerdragon](https://github.com/chillerdragon) for allowing me use their Chillerbot-UX client in launcher.
 
 ## License
 
