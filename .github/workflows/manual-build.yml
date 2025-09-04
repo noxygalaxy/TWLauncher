@@ -107,31 +107,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            libfuse2 squashfs-tools fuse
-          sudo apt-get remove -y fuse3 || true
-          sudo apt-get install -y --no-install-recommends \
-            flatpak flatpak-builder
+            libfuse2 squashfs-tools
           wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /tmp/appimagetool
           chmod +x /tmp/appimagetool
           sudo mv /tmp/appimagetool /usr/local/bin/appimagetool
-        env:
-          DEBIAN_FRONTEND: noninteractive
-
-      - name: Verify Flatpak installation
-        run: |
-          flatpak --version || { echo "Flatpak installation failed"; exit 1; }
-          flatpak-builder --version || { echo "Flatpak-builder installation failed"; exit 1; }
-          which flatpak || { echo "Flatpak binary not found in PATH"; exit 1; }
-
-      - name: Add Flathub repository
-        run: |
-          flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        env:
-          DEBIAN_FRONTEND: noninteractive
-
-      - name: Install Flatpak runtimes
-        run: |
-          flatpak --user install -y flathub org.freedesktop.Platform//23.08 org.freedesktop.Sdk//23.08
         env:
           DEBIAN_FRONTEND: noninteractive
 
@@ -152,13 +131,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Flatpak
-        run: |
-          flatpak-builder --force-clean --repo=repo build-dir com.noxygalaxy.TWLauncher.json
-          flatpak build-bundle repo dist/TWLauncher.flatpak com.noxygalaxy.TWLauncher
-        env:
-          DEBIAN_FRONTEND: noninteractive
-
       - name: List dist directory
         run: ls -la dist
 
@@ -178,16 +150,6 @@ jobs:
           name: twlauncher-linux-installer
           path: dist/*.deb
           if-no-files-found: warn
-          compression-level: 6
-          overwrite: false
-          include-hidden-files: false
-
-      - name: Upload Flatpak artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: twlauncher-linux-flatpak
-          path: dist/*.flatpak
-          if-no-files-found: error
           compression-level: 6
           overwrite: false
           include-hidden-files: false
